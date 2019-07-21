@@ -8,7 +8,7 @@ breed [ GPs GP ]
 breed [ ClaimAccepteds ClaimAccepted ]
 breed [ PreventableDeaths PreventableDeath ]
 breed [ ReviewWorkers ReviewPatient ]
-breed [ Deathpools Death ]
+breed [ Disputes Death ]
 breed [ DNAPool1s DNAPool1 ]
 breed [ DNAPool2s DNAPool2 ]
 breed [ UntreatedPopulations UntreatedPopulation ]
@@ -23,7 +23,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   InPreventableDeath
   InClaimAccepted
   InReviewWorker
-  InDeath
+  InDispute
   InUntreatedPopulation
   InDNAPool1
   InDNAPool2
@@ -34,7 +34,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   GoingtoPreventableDeath
   GoingtoClaimAccepted
   GoingtoReviewPatient
-  GoingtoDeath
+  GoingtoDispute
   GoingtoUntreatedPopulation
   GoingtoDNAPool1
   GoingtoDNAPool2
@@ -68,7 +68,7 @@ to setup
   create-ClaimAccepteds 1 [ set shape "box" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
   create-Preventabledeaths 1 [ set shape "x"  set size 5 set label "Preventable Deaths" set xcor 19.22 set ycor 5.33 set color white]
   create-ReviewWorkers 1 [ set shape "box"  set size 5 set label "Review Workers" set xcor 30.77 set ycor 5.33 set color blue ]
-  create-DeathPools 1 [ set shape "x"  set size 5 set label "Natural Deaths" set xcor 40.49 set ycor 11.58 set color blue - 10]
+  create-Disputes 1 [ set shape "x"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color blue - 10]
   create-DNAPool1s 1 [ set shape "box" set size 5 set label "First DNA" set xcor 45.29 set ycor 22.08 set color green - 10 ]
   create-DNAPool2s 1 [ set shape "box" set size 5 set label "Second DNA" set xcor 43.65 set ycor 33.52 set color red - 10 ]
   create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow - 10 ]
@@ -91,7 +91,7 @@ to go
     initialise
     gpreferral
     emergency
-    deathincare
+    Disputesincare
     becomenew
     becomeReview
     becomeDNA1
@@ -105,6 +105,8 @@ to go
     newtoLodgeClaim
     DNAFromGP
     ReviewtoGeneral
+    DisputetoGeneral
+    TestDispute
     Captrust
     calculateTrustFactor
     rememberevents
@@ -211,6 +213,20 @@ to ReviewtoGeneral
     if any? SAPops in-radius 1 [ move-to one-of SAPops Set State1 1 set InReviewWorker 0 set GoingtoSAPops 0 die ]
 end
 
+to DisputetoGeneral
+  if Dispute_to_General > random 100 and InDispute = 1 and any? Disputes-here [
+     face one-of SAPops fd speed  set GoingtoSAPops 1 set InDispute 0  ]
+     if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
+    if any? SAPops in-radius 1 [ move-to one-of SAPops set InReviewWorker 0 set GoingtoSAPops 0 die ]
+end
+
+to TestDispute
+   if Success_Dispute_Lodge > random 100 and InDispute = 1 and any? Disputes-here [
+     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0  ]
+     if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed ]
+    if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
+end
+
 to DNAFromGP ;; trust is going affect the DNA rate here
   if (DNA_from_GP_Rate + (100 - trust) ) > random 100 and InGP = 1 and any? GPs-here [
      face one-of DNAPool1s fd speed  set GoingtoDNAPool1 1 set InGP 0 ]
@@ -245,21 +261,18 @@ to DNA2Decisions
     if any? UntreatedPopulations in-radius 1 [ move-to one-of UntreatedPopulations Set InDNAPool2 0 set InUntreatedPopulation 1 set GoingtoUntreatedPopulation 0 ]
 end
 
-to deathincare
-   if 60 < random 100 and InAcuteCare = 1 and any? AcuteCares-here [
-     face one-of Deathpools fd speed  set GoingtoDeath 1 set InAcutecare 0 ]
-   if GoingtoDeath = 1 [ face one-of DeathPools fd speed  ]
-    if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InAcutecare 0 ]
+to Disputesincare
 
- if Death_Rate_Review > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here  [
-     face one-of Deathpools fd speed  set GoingtoDeath 1 set InReviewWorker 0 ]
-   if GoingtoDeath = 1 [ face one-of DeathPools fd speed ]
-    if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InReviewWorker 0 ]
+ if Dispute_Rate_Review > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here  [
+     face one-of Disputes fd speed  set GoingtoDispute 1 set InReviewWorker 0 ]
+   if GoingtoDispute = 1 [ face one-of Disputes fd speed ]
+    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InReviewWorker 0 set satisfaction satisfaction * .99 set trust trust * .99 ]
 
- if Death_Rate_LodgeClaim > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
-    face one-of Deathpools fd speed  set GoingtoDeath 1 set InLodgeClaim 0 ]
-   if GoingtoDeath = 1 [ face one-of DeathPools fd speed  ]
-    if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InLodgeClaim 0 ]
+ if Dispute_Rate_LodgeClaim > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
+    face one-of Disputes fd speed set GoingtoDispute 1 set InLodgeClaim 0 ]
+   if GoingtoDispute = 1 [ face one-of Disputes fd speed  ]
+    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .99 set trust trust * .99 ]
+
 end
 
 to becomePreventableDeath
@@ -271,7 +284,7 @@ end
 
 to countpreventabledeaths
   set preventabledeathcount ( count Workers with [ goingtopreventabledeath = 1 ] )
-  set naturaldeathcount ( count Workers with [ GoingtoDeath = 1 ] )
+  set naturaldeathcount ( count Workers with [ GoingtoDispute = 1 ] )
 
 end
 
@@ -522,7 +535,7 @@ BUTTON
 308
 45
 Reset Patients
-ask patients [ die ] \nask turtles [ set size 5 ] 
+ask workers [ die ] \nask turtles [ set size 5 ] 
 NIL
 1
 T
@@ -539,7 +552,7 @@ BUTTON
 308
 81
 Trace Paths
-ask patients [ pen-down ] 
+ask workers [ pen-down ] 
 T
 1
 T
@@ -727,13 +740,13 @@ HORIZONTAL
 SLIDER
 68
 368
-255
+246
 402
-Death_Rate_LodgeClaim
-Death_Rate_LodgeClaim
+Dispute_Rate_LodgeClaim
+Dispute_Rate_LodgeClaim
 0
 100
-2.0
+1.0
 1
 1
 NIL
@@ -769,11 +782,11 @@ SLIDER
 407
 245
 440
-Death_Rate_Review
-Death_Rate_Review
+Dispute_Rate_Review
+Dispute_Rate_Review
 0
 100
-6.0
+2.0
 1
 1
 NIL
@@ -880,7 +893,7 @@ DNA_From_GP_Rate
 DNA_From_GP_Rate
 0
 100
-13.0
+0.0
 1
 1
 NIL
@@ -1019,7 +1032,7 @@ New_General
 New_General
 0
 100
-13.0
+0.0
 1
 1
 NIL
@@ -1211,7 +1224,7 @@ MONITOR
 1511
 447
 Trust
-mean [ trust ] of patients with [ InWaitlist = 1 ]
+mean [ trust ] of workers with [ InLodgeClaim = 1 ]
 1
 1
 11
@@ -1299,6 +1312,36 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [ trust ] of workers"
+
+SLIDER
+70
+772
+243
+806
+Dispute_to_General
+Dispute_to_General
+0
+100
+51.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+73
+812
+256
+846
+Success_Dispute_Lodge
+Success_Dispute_Lodge
+0
+100
+0.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
