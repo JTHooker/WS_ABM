@@ -10,7 +10,7 @@ breed [ PreventableDeaths PreventableDeath ]
 breed [ TreatmentCentres TreatmentCentre ]
 breed [ Disputes Death ]
 breed [ Employer1s Employer1 ]
-breed [ DNAPool2s DNAPool2 ]
+breed [ RTWs RTW ]
 breed [ UntreatedPopulations UntreatedPopulation ]
 breed [ LodgeClaims LodgeClaim ]
 breed [ Workers Worker ]
@@ -26,7 +26,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   InDispute
   InUntreatedPopulation
   InEmployer1
-  InDNAPool2
+  InRTW
   InLodgeClaim
   State1
   GoingtoGP
@@ -37,7 +37,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   GoingtoDispute
   GoingtoUntreatedPopulation
   GoingtoEmployer1
-  GoingtoDNAPool2
+  GoingtoRTW
   GoingtoLodgeClaim
   GoingtoSAPops
   Trust
@@ -61,6 +61,11 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   Responsiveness
 ]
 
+Employer1s-own [
+  readiness
+]
+
+
 to setup
   clear-all
   create-GPs 1 [ set shape "box" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color red]
@@ -70,8 +75,8 @@ to setup
   create-Preventabledeaths 1 [ set shape "x"  set size 5 set label "Preventable Deaths" set xcor 19.22 set ycor 5.33 set color white]
   create-TreatmentCentres 1 [ set shape "box"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color blue ]
   create-Disputes 1 [ set shape "x"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color blue - 10]
-  create-Employer1s 1 [ set shape "box" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color green - 10 ]
-  create-DNAPool2s 1 [ set shape "box" set size 5 set label "Second DNA" set xcor 43.65 set ycor 33.52 set color red - 10 ]
+  create-Employer1s 1 [ set shape "box" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color green - 10 set readiness random-normal 50 10 ]
+  create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red - 10 ]
   create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow - 10 ]
   create-SAPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white + 10 ]
   ask turtles [ create-links-with other turtles show label ]
@@ -98,7 +103,7 @@ to go
     becomenew
     becomeReview
     becomeDNA1
-    becomeDNA2
+    ReturntoWork
     DNA2decisions
     becomePreventableDeath
     UntreatedReEnter
@@ -218,7 +223,7 @@ end
 
 to TestDispute
    ifelse Success_Dispute_Lodge > random 100 and InDispute = 1 and any? Disputes-here [
-     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0  ]   [ disputetoGeneral ]
+     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0  ]   [ DisputetoGeneral ]
 
     if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed ]
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
@@ -226,8 +231,8 @@ to TestDispute
 end
 
 to DisputetoGeneral
-  ifelse Dispute_to_General > random 100 and InDispute = 1 and any? Disputes-here [
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set InDispute 0  ] [ t
+  if Dispute_to_General > random 100 and InDispute = 1 and any? Disputes-here [
+    face one-of SAPops fd speed  set GoingtoSAPops 1 set InDispute 0  ]
      if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
     if any? SAPops in-radius 1 [ move-to one-of SAPops set InTreatment 0 set GoingtoSAPops 0 die ]
 end
@@ -239,11 +244,11 @@ to EmployerFromGP ;; trust is going affect the DNA rate here
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
 end
 
-to becomeDNA2 ;; trust is going to affec the DNA2 rate here
-     if (DNA2_Rate + (100 - trust )) > random 100 and InEmployer1 = 1 and any? Employer1s-here [
-     face one-of DNAPool2s fd speed  set GoingtoDNAPool2 1 set InEmployer1 0 ]
-     if GoingtoDNAPool2 = 1 [ face one-of DNAPool2s fd speed ]
-    if any? DNAPool2s in-radius 1 [ move-to one-of DNAPool2s Set InDNAPool2 1 set InEmployer1 0 set GoingtoDNAPool2 0 ]
+to ReturntoWork ;; trust is going to affec the DNA2 rate here
+  if health + [ readiness ] of one-of Employer1s > random 100 and InEmployer1 = 1 and any? Employer1s-here [
+     face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 ]
+     if GoingtoRTW = 1 [ face one-of RTWs fd speed ]
+    if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 set InEmployer1 0 set GoingtoRTW 0 ]
 end
 
 to BecomeReviewfromDNA ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
@@ -253,17 +258,17 @@ if Trust > random 100 and InEmployer1 = 1 and any? Employer1s-here [
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InEmployer1 0 set GoingtoreviewPatient 0 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
-if Trust > random 100 and InDNAPool2 = 1 and any? DNAPool2s-here [
-      face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InDNAPool2 0 ]
+if Trust > random 100 and InRTW = 1 and any? RTWs-here [
+      face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InRTW 0 ]
     if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InDNAPool2 0 set GoingtoreviewPatient 0 ]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InRTW 0 set GoingtoreviewPatient 0 ]
 end
 
 to DNA2Decisions
-    if Active_Discharge_Rate > random 100 and InDNAPool2 = 1 and any? DNAPool2s-here [
-     face one-of UntreatedPopulations fd speed  set GoingtoUntreatedPopulation 1 Set InDNAPool2 0 ]
+    if Active_Discharge_Rate > random 100 and InRTW = 1 and any? RTWs-here [
+     face one-of UntreatedPopulations fd speed  set GoingtoUntreatedPopulation 1 Set InRTW 0 ]
      if GoingtoUntreatedPopulation = 1 [ face one-of UntreatedPopulations fd speed ]
-    if any? UntreatedPopulations in-radius 1 [ move-to one-of UntreatedPopulations Set InDNAPool2 0 set InUntreatedPopulation 1 set GoingtoUntreatedPopulation 0 ]
+    if any? UntreatedPopulations in-radius 1 [ move-to one-of UntreatedPopulations Set InRTW 0 set InUntreatedPopulation 1 set GoingtoUntreatedPopulation 0 ]
 end
 
 to Disputesincare
@@ -529,7 +534,7 @@ MONITOR
 1429
 397
 Review Workers
-count workers with [InreviewWorker = 1 ] * 10
+count workers with [InTreatment = 1 ] * 10
 0
 1
 11
@@ -656,7 +661,7 @@ SLIDER
 69
 473
 244
-507
+506
 Accepted_to_Treatment
 Accepted_to_Treatment
 1
@@ -687,8 +692,8 @@ SLIDER
 299
 246
 332
-DNA2_to_Review_Rate
-DNA2_to_Review_Rate
+RTW_to_General_Population
+RTW_to_General_Population
 0
 100
 91.0
@@ -746,7 +751,7 @@ SLIDER
 68
 368
 246
-402
+401
 Dispute_Rate_LodgeClaim
 Dispute_Rate_LodgeClaim
 0
@@ -758,10 +763,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-70
-733
-245
-766
+1669
+100
+1844
+133
 Active_Discharge_Rate
 Active_Discharge_Rate
 0
@@ -839,7 +844,7 @@ MONITOR
 1510
 397
 DNA Total
-( count workers with [ InDNAPool1 = 1 ] +\ncount workers with [ InDNAPool2 = 1 ] ) * 10
+( count workers with [ InEmployer1 = 1 ] +\ncount workers with [ InDNAPool2 = 1 ] ) * 10
 0
 1
 11
@@ -878,7 +883,7 @@ SLIDER
 69
 543
 248
-577
+576
 Emergency_to_Accepted
 Emergency_to_Accepted
 0
@@ -893,7 +898,7 @@ SLIDER
 70
 583
 245
-617
+616
 Employer_From_GP_Rate
 Employer_From_GP_Rate
 0
@@ -1044,10 +1049,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-70
-657
-243
-690
+1669
+24
+1842
+57
 New_LodgeClaim
 New_LodgeClaim
 0
@@ -1059,10 +1064,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-71
-695
-244
-728
+1670
+62
+1843
+95
 Review_General
 Review_General
 0
@@ -1319,10 +1324,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [ trust ] of workers"
 
 SLIDER
-70
-772
-243
-806
+1669
+139
+1842
+172
 Dispute_to_General
 Dispute_to_General
 0
@@ -1334,15 +1339,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-73
-812
-243
-846
+1673
+179
+1843
+212
 Success_Dispute_Lodge
 Success_Dispute_Lodge
 0
 100
-63.0
+51.0
 1
 1
 NIL
