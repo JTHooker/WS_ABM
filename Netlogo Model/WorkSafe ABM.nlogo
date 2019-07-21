@@ -5,24 +5,24 @@ globals [ preventabledeathcount
 breed [ SAPops SAPop ]
 breed [ AcuteCares AcuteCare ]
 breed [ GPs GP ]
-breed [ NewPatients NewPatient ]
+breed [ ClaimAccepteds ClaimAccepted ]
 breed [ PreventableDeaths PreventableDeath ]
-breed [ ReviewPatients ReviewPatient ]
+breed [ ReviewWorkers ReviewPatient ]
 breed [ Deathpools Death ]
 breed [ DNAPool1s DNAPool1 ]
 breed [ DNAPool2s DNAPool2 ]
 breed [ UntreatedPopulations UntreatedPopulation ]
 breed [ LodgeClaims LodgeClaim ]
-breed [ Patients Patient ]
+breed [ Workers Worker ]
 
-Patients-own ; states and qualities that individual patients have or are in at any stage
+Workers-own ; states and qualities that individual Workers have or are in at any stage
 [
   motivation
   InGP
   InAcuteCare
   InPreventableDeaths
-  InNewPatients
-  InReviewPatients
+  InClaimAccepteds
+  InReviewWorkers
   InDeath
   InUntreatedPopulation
   InDNAPool1
@@ -32,7 +32,7 @@ Patients-own ; states and qualities that individual patients have or are in at a
   GoingtoGP
   GoingtoAcuteCare
   GoingtoPreventableDeath
-  GoingtoNewPatient
+  GoingtoClaimAccepted
   GoingtoReviewPatient
   GoingtoDeath
   GoingtoUntreatedPopulation
@@ -65,17 +65,17 @@ to setup
   create-GPs 1 [ set shape "box" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color red]
   create-AcuteCares 1 [ set shape "box" set size 5 set label "Acute Care" set xcor 6.35 set ycor 33.52 set color green ]
   create-LodgeClaims 1 [ set shape "box" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color orange ]
-  create-newPatients 1 [ set shape "box" set size 5 set label "New Patients" set xcor 9.51 set ycor 11.58 set color yellow ]
+  create-ClaimAccepteds 1 [ set shape "box" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
   create-Preventabledeaths 1 [ set shape "x"  set size 5 set label "Preventable Deaths" set xcor 19.22 set ycor 5.33 set color white]
-  create-ReviewPatients 1 [ set shape "box"  set size 5 set label "Review Patients" set xcor 30.77 set ycor 5.33 set color blue ]
+  create-ReviewWorkers 1 [ set shape "box"  set size 5 set label "Review Workers" set xcor 30.77 set ycor 5.33 set color blue ]
   create-DeathPools 1 [ set shape "x"  set size 5 set label "Natural Deaths" set xcor 40.49 set ycor 11.58 set color blue - 10]
   create-DNAPool1s 1 [ set shape "box" set size 5 set label "First DNA" set xcor 45.29 set ycor 22.08 set color green - 10 ]
   create-DNAPool2s 1 [ set shape "box" set size 5 set label "Second DNA" set xcor 43.65 set ycor 33.52 set color red - 10 ]
   create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow - 10 ]
   create-SAPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white + 10 ]
   ask turtles [ create-links-with other turtles show label ]
-  create-patients Population [ set shape "person" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1 ]
-  ask patients [ resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
+  create-workers Population [ set shape "person" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1 ]
+  ask workers [ resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations] ;;; made a change
   reset-ticks
 end
@@ -87,7 +87,7 @@ to resettrust
 end
 
 to go
-  ask patients [
+  ask workers [
     initialise
     gpreferral
     emergency
@@ -119,10 +119,10 @@ to go
 
 
   ask turtles [
-    set size (5 + sqrt count patients in-radius 1 )
+    set size (5 + sqrt count Workers in-radius 1 )
       ]
-  ask patients [ set size 1 ]
-  createnewpatients
+  ask Workers [ set size 1 ]
+  createClaimAccepteds
   countpreventabledeaths
    ;; burnpatches
   if ticks = 10000 [ stop ]
@@ -165,50 +165,50 @@ to becomeLodgeClaim ;;
 end
 
 to becomeNew
-  if LodgeClaim_Delay < random 100 and InLodgeClaim = 1 and any? LodgeClaims-here and count patients with [  InNewPatients = ( 1 * OverbookingRate )]  < New_Capacity [
-      face one-of NewPatients fd speed  set goingtoNewPatient 1 Set InLodgeClaim 0  ]
-     if goingtoNewPatient = 1 [ Face one-of NewPatients fd speed ]
-      if any? Newpatients in-radius 1 [ move-to one-of NewPatients Set InNewPatients 1 Set InLodgeClaim 0 set goingtoNewPatient 0 ]
+  if LodgeClaim_Delay < random 100 and InLodgeClaim = 1 and any? LodgeClaims-here and count Workers with [  InClaimAccepteds = ( 1 * OverbookingRate )]  < New_Capacity [
+      face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
+     if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
+      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepteds 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 ]
 end
 
 to becomeReview
-    if New_to_Review < random 100 and InNewPatients = 1 and any? NewPatients-here and count patients with [  InReviewPatients = 1 ] < Review_Capacity  [
-      face one-of ReviewPatients fd speed  set GoingtoReviewPatient 1 Set InNewPatients 0  ]
-    if GoingtoreviewPatient = 1 [ face one-of ReviewPatients fd speed  ]
-      if any? Reviewpatients in-radius 1 [ move-to one-of ReviewPatients Set InReviewPatients 1 Set InNewPatients 0 set GoingtoreviewPatient 0 ]
+    if New_to_Review < random 100 and InClaimAccepteds = 1 and any? ClaimAccepteds-here and count Workers with [  InReviewWorkers = 1 ] < Review_Capacity  [
+      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepteds 0  ]
+    if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InClaimAccepteds 0 set GoingtoreviewPatient 0 ]
 
 if Acute_to_Review < random 100 and InAcuteCare = 1 and any? AcuteCares-here [
-      face one-of ReviewPatients fd speed  set GoingtoReviewPatient 1 Set InNewPatients 0 ]
-    if GoingtoreviewPatient = 1 [ face one-of ReviewPatients fd speed  ]
-      if any? Reviewpatients in-radius 1 [ move-to one-of ReviewPatients Set InReviewPatients 1 Set InNewPatients 0 set GoingtoreviewPatient 0 ]
+      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepteds 0 ]
+    if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InClaimAccepteds 0 set GoingtoreviewPatient 0 ]
 end
 
 to OverCapNew
-  if inNewPatients = 1 and count patients with [ innewpatients = 1 ] > New_Capacity [
-    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InNewPatients 0 ]
+  if inClaimAccepteds = 1 and count Workers with [ inClaimAccepteds = 1 ] > New_Capacity [
+    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InClaimAccepteds 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
-        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InNewPatients 0 set GoingtoLodgeClaim 0  ]
+        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InClaimAccepteds 0 set GoingtoLodgeClaim 0  ]
 end
 
 to OverCapReview
-    if inReviewPatients = 1 and count patients with [ inReviewpatients = 1 ] > Review_Capacity [
-    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InReviewPatients 0 ]
+    if inReviewWorkers = 1 and count Workers with [ inReviewWorkers = 1 ] > Review_Capacity [
+    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InReviewWorkers 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
-        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InReviewPatients 0 set GoingtoLodgeClaim 0  ]
+        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InReviewWorkers 0 set GoingtoLodgeClaim 0  ]
 end
 
 to becomeDNA1 ;; in here is where trust is going to affect the DNA rate
-   if (DNA1_Rate + (100 - trust)) > random 100 and InReviewPatients = 1 and any? ReviewPatients-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
-     face one-of DNAPool1s fd speed  set GoingtoDNAPool1 1 set InReviewPatients 0 ]
+   if (DNA1_Rate + (100 - trust)) > random 100 and InReviewWorkers = 1 and any? ReviewWorkers-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
+     face one-of DNAPool1s fd speed  set GoingtoDNAPool1 1 set InReviewWorkers 0 ]
      if GoingtoDNAPool1 = 1 [ face one-of DNAPool1s fd speed ]
-    if any? DNAPool1s in-radius 1 [ move-to one-of DNAPool1s Set InDNAPool1 1 set InReviewPatients 0 set GoingtoDNAPool1 0 ]
+    if any? DNAPool1s in-radius 1 [ move-to one-of DNAPool1s Set InDNAPool1 1 set InReviewWorkers 0 set GoingtoDNAPool1 0 ]
 end
 
 to ReviewtoGeneral
-  if Review_General > random 100 and InReviewPatients = 1 and any? ReviewPatients-here [
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set InReviewPatients 0  ] ;;DNA Rate is inversely proportional to trust
+  if Review_General > random 100 and InReviewWorkers = 1 and any? ReviewWorkers-here [
+     face one-of SAPops fd speed  set GoingtoSAPops 1 set InReviewWorkers 0  ] ;;DNA Rate is inversely proportional to trust
      if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops Set State1 1 set InReviewPatients 0 set GoingtoSAPops 0 die ]
+    if any? SAPops in-radius 1 [ move-to one-of SAPops Set State1 1 set InReviewWorkers 0 set GoingtoSAPops 0 die ]
 end
 
 to DNAFromGP ;; trust is going affect the DNA rate here
@@ -227,15 +227,15 @@ end
 
 to BecomeReviewfromDNA ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
 if Trust > random 100 and InDNAPool1 = 1 and any? DNAPool1s-here [
-      face one-of ReviewPatients fd speed  set GoingtoReviewPatient 1 Set InDNAPool1 0 ]
-    if GoingtoreviewPatient = 1 [ face one-of ReviewPatients fd speed  ]
-      if any? Reviewpatients in-radius 1 [ move-to one-of ReviewPatients Set InReviewPatients 1 Set InDNAPool1 0 set GoingtoreviewPatient 0 ]
+      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InDNAPool1 0 ]
+    if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InDNAPool1 0 set GoingtoreviewPatient 0 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
 if Trust > random 100 and InDNAPool2 = 1 and any? DNAPool2s-here [
-      face one-of ReviewPatients fd speed  set GoingtoReviewPatient 1 Set InDNAPool2 0 ]
-    if GoingtoreviewPatient = 1 [ face one-of ReviewPatients fd speed  ]
-      if any? Reviewpatients in-radius 1 [ move-to one-of ReviewPatients Set InReviewPatients 1 Set InDNAPool2 0 set GoingtoreviewPatient 0 ]
+      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InDNAPool2 0 ]
+    if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InDNAPool2 0 set GoingtoreviewPatient 0 ]
 end
 
 to DNA2Decisions
@@ -251,10 +251,10 @@ to deathincare
    if GoingtoDeath = 1 [ face one-of DeathPools fd speed  ]
     if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InAcutecare 0 ]
 
- if Death_Rate_Review > random 100 and InReviewPatients = 1 and any? ReviewPatients-here  [
-     face one-of Deathpools fd speed  set GoingtoDeath 1 set InReviewPatients 0 ]
+ if Death_Rate_Review > random 100 and InReviewWorkers = 1 and any? ReviewWorkers-here  [
+     face one-of Deathpools fd speed  set GoingtoDeath 1 set InReviewWorkers 0 ]
    if GoingtoDeath = 1 [ face one-of DeathPools fd speed ]
-    if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InReviewPatients 0 ]
+    if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InReviewWorkers 0 ]
 
  if Death_Rate_LodgeClaim > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
     face one-of Deathpools fd speed  set GoingtoDeath 1 set InLodgeClaim 0 ]
@@ -270,8 +270,8 @@ to becomePreventableDeath
 end
 
 to countpreventabledeaths
-  set preventabledeathcount ( count patients with [ goingtopreventabledeath = 1 ] )
-  set naturaldeathcount ( count patients with [ GoingtoDeath = 1 ] )
+  set preventabledeathcount ( count Workers with [ goingtopreventabledeath = 1 ] )
+  set naturaldeathcount ( count Workers with [ GoingtoDeath = 1 ] )
 
 end
 
@@ -282,28 +282,28 @@ to UntreatedReEnter
     if any? SAPops in-radius 1 [ move-to one-of SAPops set State1 1 set GoingtoSAPops 0 set inUntreatedPopulation 0 die ]
 
 if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
-     face one-of ReviewPatients fd speed  set GoingtoReviewPatient 1 set inUntreatedPopulation 0 ]
-   if GoingtoReviewPatient = 1 [ face one-of ReviewPatients fd speed ]
-    if any? Reviewpatients in-radius 1 [ move-to one-of ReviewPatients set InReviewpatients 1 set GoingtoReviewPatient 0 set inUntreatedPopulation 0 ]
+     face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 set inUntreatedPopulation 0 ]
+   if GoingtoReviewPatient = 1 [ face one-of ReviewWorkers fd speed ]
+    if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers set InReviewWorkers 1 set GoingtoReviewPatient 0 set inUntreatedPopulation 0 ]
 end
 
 to NewtoGeneral
-  if New_General > random 100 and InNewpatients = 1 and any? newPatients-here [ ;; Patients move from being New back into the General Population
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set InNewPatients 0 ]
+  if New_General > random 100 and InClaimAccepteds = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
+     face one-of SAPops fd speed  set GoingtoSAPops 1 set InClaimAccepteds 0 ]
   if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops set State1 1 set GoingtoSAPops 0 set InNewPatients 0 die ]
+    if any? SAPops in-radius 1 [ move-to one-of SAPops set State1 1 set GoingtoSAPops 0 set InClaimAccepteds 0 die ]
 end
 
 to NewtoLodgeClaim
-  if New_LodgeClaim > random 100 and InNewpatients = 1 and any? newPatients-here [ ;; Patients move from being New back into the General Population
-     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InNewPatients 0 ]
+  if New_LodgeClaim > random 100 and InClaimAccepteds = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
+     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InClaimAccepteds 0 ]
   if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed ]
-    if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims set InLodgeClaim 1 set GoingtoLodgeClaim 0 set InNewPatients 0 ]
+    if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims set InLodgeClaim 1 set GoingtoLodgeClaim 0 set InClaimAccepteds 0 ]
 end
 
 to burnpatches
   ask patches [
-    if any? patients-here [ set pcolor pcolor + .01 ]
+    if any? Workers-here [ set pcolor pcolor + .01 ]
   ]
 end
 
@@ -315,8 +315,8 @@ end
 to rememberevents
     if any? LodgeClaims-here and engaged = true [ set memory 1 set timenow ticks ]
    ;; add in more conditions here
-    if any? reviewPatients-here [ set memory 1 set timenow ticks ]
-    if any? newPatients-here [ set memory 1 set timenow ticks ]
+    if any? reviewWorkers-here [ set memory 1 set timenow ticks ]
+    if any? ClaimAccepteds-here [ set memory 1 set timenow ticks ]
     if any? acuteCares-here [ set memory 1 set timenow ticks ]
     if any? GPs-here and memory = 1 [ set timenow ticks ]
 
@@ -328,9 +328,9 @@ to calculatetrustfactor
   if memory = 1 and any? LodgeClaims-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength ]
   ;;add in more here
-  if memory = 1 and any? reviewPatients-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
+  if memory = 1 and any? reviewWorkers-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newAssociationStrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
-  if memory = 1 and any? newPatients-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
+  if memory = 1 and any? ClaimAccepteds-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newassociationstrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
   if memory = 1 and any? acuteCares-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newassociationstrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
@@ -349,10 +349,10 @@ to resetinitial
     if newassociationstrength <= MaxTrust [ set initialassociationstrength ( newassociationstrength ) ]
 end
 
-to createNewPatients
- if count patients < MaxPatients [ create-patients New_Patients  [ set shape "person" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1
+to createClaimAccepteds
+ if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1
     resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
-    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ] ;;ifelse any? patients with [ GoingtoSAPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of patients with [ GoingtoSApops = 1 ] ][ set trust random-normal 80 10 resettrust
+    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ] ;;ifelse any? Workers with [ GoingtoSAPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoSApops = 1 ] ][ set trust random-normal 80 10 resettrust
 
   ]
 end
@@ -363,8 +363,8 @@ to limitInitialAssociation
 end
 
 to SocialEpi
-  if any? other patients-here with [ trust <  [ trust ] of myself ] [ set trust trust - 1 ]
-  if any? other patients-here with [ trust >  [ trust ] of myself ] [ set trust trust + 1 ]
+  if any? other Workers-here with [ trust <  [ trust ] of myself ] [ set trust trust - 1 ]
+  if any? other Workers-here with [ trust >  [ trust ] of myself ] [ set trust trust + 1 ]
 end
 
 to colourme
@@ -759,8 +759,8 @@ CHOOSER
 48
 189
 93
-New_Patients
-New_Patients
+Injured_Workers
+Injured_Workers
 1 2 3 4 5 10 20
 6
 
@@ -1060,8 +1060,8 @@ BUTTON
 100
 180
 134
-Heat Wave
-create-patients 500 [ set shape \"person\" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
+Mass-Incident
+create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
 NIL
 1
 T
@@ -1155,8 +1155,8 @@ SLIDER
 688
 474
 721
-MaxPatients
-MaxPatients
+MaxWorkers
+MaxWorkers
 0
 2000
 2000.0
