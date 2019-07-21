@@ -20,9 +20,9 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   motivation
   InGP
   InAcuteCare
-  InPreventableDeaths
-  InClaimAccepteds
-  InReviewWorkers
+  InPreventableDeath
+  InClaimAccepted
+  InReviewWorker
   InDeath
   InUntreatedPopulation
   InDNAPool1
@@ -165,50 +165,50 @@ to becomeLodgeClaim ;;
 end
 
 to becomeNew
-  if LodgeClaim_Delay < random 100 and InLodgeClaim = 1 and any? LodgeClaims-here and count Workers with [  InClaimAccepteds = ( 1 * OverbookingRate )]  < New_Capacity [
+  if LodgeClaim_Delay < random 100 and InLodgeClaim = 1 and any? LodgeClaims-here and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < New_Capacity [
       face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
      if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
-      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepteds 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 ]
+      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 ]
 end
 
 to becomeReview
-    if New_to_Review < random 100 and InClaimAccepteds = 1 and any? ClaimAccepteds-here and count Workers with [  InReviewWorkers = 1 ] < Review_Capacity  [
-      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepteds 0  ]
+    if New_to_Review < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InReviewWorker = 1 ] < Review_Capacity  [
+      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0  ]
     if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
-      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InClaimAccepteds 0 set GoingtoreviewPatient 0 ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 ]
 
 if Acute_to_Review < random 100 and InAcuteCare = 1 and any? AcuteCares-here [
-      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepteds 0 ]
+      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0 ]
     if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
-      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InClaimAccepteds 0 set GoingtoreviewPatient 0 ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 ]
 end
 
 to OverCapNew
-  if inClaimAccepteds = 1 and count Workers with [ inClaimAccepteds = 1 ] > New_Capacity [
-    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InClaimAccepteds 0 ]
+  if inClaimAccepted = 1 and count Workers with [ inClaimAccepted = 1 ] > New_Capacity [
+    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InClaimAccepted 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
-        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InClaimAccepteds 0 set GoingtoLodgeClaim 0  ]
+        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InClaimAccepted 0 set GoingtoLodgeClaim 0  ]
 end
 
 to OverCapReview
-    if inReviewWorkers = 1 and count Workers with [ inReviewWorkers = 1 ] > Review_Capacity [
-    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InReviewWorkers 0 ]
+    if inReviewWorker = 1 and count Workers with [ inReviewWorker = 1 ] > Review_Capacity [
+    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InReviewWorker 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
-        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InReviewWorkers 0 set GoingtoLodgeClaim 0  ]
+        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InReviewWorker 0 set GoingtoLodgeClaim 0  ]
 end
 
 to becomeDNA1 ;; in here is where trust is going to affect the DNA rate
-   if (DNA1_Rate + (100 - trust)) > random 100 and InReviewWorkers = 1 and any? ReviewWorkers-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
-     face one-of DNAPool1s fd speed  set GoingtoDNAPool1 1 set InReviewWorkers 0 ]
+   if (DNA1_Rate + (100 - trust)) > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
+     face one-of DNAPool1s fd speed  set GoingtoDNAPool1 1 set InReviewWorker 0 ]
      if GoingtoDNAPool1 = 1 [ face one-of DNAPool1s fd speed ]
-    if any? DNAPool1s in-radius 1 [ move-to one-of DNAPool1s Set InDNAPool1 1 set InReviewWorkers 0 set GoingtoDNAPool1 0 ]
+    if any? DNAPool1s in-radius 1 [ move-to one-of DNAPool1s Set InDNAPool1 1 set InReviewWorker 0 set GoingtoDNAPool1 0 ]
 end
 
 to ReviewtoGeneral
-  if Review_General > random 100 and InReviewWorkers = 1 and any? ReviewWorkers-here [
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set InReviewWorkers 0  ] ;;DNA Rate is inversely proportional to trust
+  if Review_General > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here [
+     face one-of SAPops fd speed  set GoingtoSAPops 1 set InReviewWorker 0  ] ;;DNA Rate is inversely proportional to trust
      if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops Set State1 1 set InReviewWorkers 0 set GoingtoSAPops 0 die ]
+    if any? SAPops in-radius 1 [ move-to one-of SAPops Set State1 1 set InReviewWorker 0 set GoingtoSAPops 0 die ]
 end
 
 to DNAFromGP ;; trust is going affect the DNA rate here
@@ -229,13 +229,13 @@ to BecomeReviewfromDNA ;; trust is going to affect the likelihood that anyone co
 if Trust > random 100 and InDNAPool1 = 1 and any? DNAPool1s-here [
       face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InDNAPool1 0 ]
     if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
-      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InDNAPool1 0 set GoingtoreviewPatient 0 ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InDNAPool1 0 set GoingtoreviewPatient 0 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
 if Trust > random 100 and InDNAPool2 = 1 and any? DNAPool2s-here [
       face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InDNAPool2 0 ]
     if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
-      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorkers 1 Set InDNAPool2 0 set GoingtoreviewPatient 0 ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InDNAPool2 0 set GoingtoreviewPatient 0 ]
 end
 
 to DNA2Decisions
@@ -251,10 +251,10 @@ to deathincare
    if GoingtoDeath = 1 [ face one-of DeathPools fd speed  ]
     if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InAcutecare 0 ]
 
- if Death_Rate_Review > random 100 and InReviewWorkers = 1 and any? ReviewWorkers-here  [
-     face one-of Deathpools fd speed  set GoingtoDeath 1 set InReviewWorkers 0 ]
+ if Death_Rate_Review > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here  [
+     face one-of Deathpools fd speed  set GoingtoDeath 1 set InReviewWorker 0 ]
    if GoingtoDeath = 1 [ face one-of DeathPools fd speed ]
-    if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InReviewWorkers 0 ]
+    if any? Deathpools in-radius 1 [ move-to one-of Deathpools set InDeath 1 die set InReviewWorker 0 ]
 
  if Death_Rate_LodgeClaim > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
     face one-of Deathpools fd speed  set GoingtoDeath 1 set InLodgeClaim 0 ]
@@ -266,7 +266,7 @@ to becomePreventableDeath
   if Death_Rate_Untreated > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
      face one-of PreventableDeaths fd speed  set GoingtoPreventableDeath 1 set inUntreatedPopulation 0  ]
    if GoingtoPreventableDeath = 1 [ face one-of PreventableDeaths fd speed ]
-    if any? PreventableDeaths in-radius 1 [ move-to one-of PreventableDeaths set InPreventableDeaths 1 die set inUntreatedPopulation 0 ]
+    if any? PreventableDeaths in-radius 1 [ move-to one-of PreventableDeaths set InPreventableDeath 1 die set inUntreatedPopulation 0 ]
 end
 
 to countpreventabledeaths
@@ -284,21 +284,21 @@ to UntreatedReEnter
 if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 set inUntreatedPopulation 0 ]
    if GoingtoReviewPatient = 1 [ face one-of ReviewWorkers fd speed ]
-    if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers set InReviewWorkers 1 set GoingtoReviewPatient 0 set inUntreatedPopulation 0 ]
+    if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers set InReviewWorker 1 set GoingtoReviewPatient 0 set inUntreatedPopulation 0 ]
 end
 
 to NewtoGeneral
-  if New_General > random 100 and InClaimAccepteds = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set InClaimAccepteds 0 ]
+  if New_General > random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
+     face one-of SAPops fd speed  set GoingtoSAPops 1 set InClaimAccepted 0 ]
   if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops set State1 1 set GoingtoSAPops 0 set InClaimAccepteds 0 die ]
+    if any? SAPops in-radius 1 [ move-to one-of SAPops set State1 1 set GoingtoSAPops 0 set InClaimAccepted 0 die ]
 end
 
 to NewtoLodgeClaim
-  if New_LodgeClaim > random 100 and InClaimAccepteds = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
-     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InClaimAccepteds 0 ]
+  if New_LodgeClaim > random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
+     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InClaimAccepted 0 ]
   if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed ]
-    if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims set InLodgeClaim 1 set GoingtoLodgeClaim 0 set InClaimAccepteds 0 ]
+    if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims set InLodgeClaim 1 set GoingtoLodgeClaim 0 set InClaimAccepted 0 ]
 end
 
 to burnpatches
@@ -437,8 +437,8 @@ MONITOR
 352
 1315
 397
-Total Patients
-count Patients * 10
+Total Workers
+count Workers * 10
 0
 1
 11
@@ -464,7 +464,7 @@ MONITOR
 1274
 446
 With GP
-count Patients with [ inGP = 1 ] * 10
+count Workers with [ inGP = 1 ] * 10
 0
 1
 11
@@ -485,14 +485,14 @@ true
 true
 "" "if ticks = 100 [ clear-plot ] \n\nif \"Reset Patients\" = true [ clear-plot ] "
 PENS
-"New Patients" 1.0 0 -11085214 true "" "plot count patients with [ inNewPatients = 1 ] "
-"Review Patients" 1.0 0 -14454117 true "" "plot count patients with [ inreviewPatients = 1 ] "
-"With GP" 1.0 0 -2674135 true "" "plot count patients with [ InGP = 1 ] "
-"In Waitlist" 1.0 0 -16777216 true "" "plot count patients with [ inLodgeClaim = 1 ] "
-"Trust" 1.0 0 -7500403 true "" "plot mean [ trust ] of patients"
-"Trust In Waitlist" 1.0 0 -955883 true "" "plot mean [ trust ] of patients with [ inLodgeClaim = 1 ] "
-"Trust In New" 1.0 0 -1184463 true "" "plot mean [ trust ] of patients with [ inNewPatients = 1 ] "
-"Trust In Review" 1.0 0 -13345367 true "" "plot mean [ trust ] of patients with [ inReviewPatients = 1 ] "
+"New Patients" 1.0 0 -11085214 true "" "plot count workers with [ inClaimAccepted = 1 ] "
+"Review Patients" 1.0 0 -14454117 true "" "plot count workers with [ inreviewWorker = 1 ] "
+"With GP" 1.0 0 -2674135 true "" "plot count workers with [ InGP = 1 ] "
+"In Waitlist" 1.0 0 -16777216 true "" "plot count workers with [ inLodgeClaim = 1 ] "
+"Trust" 1.0 0 -7500403 true "" "plot mean [ trust ] of workers"
+"Trust In Waitlist" 1.0 0 -955883 true "" "plot mean [ trust ] of workers with [ inLodgeClaim = 1 ] "
+"Trust In New" 1.0 0 -1184463 true "" "plot mean [ trust ] of workers with [ inClaimAccepted = 1 ] "
+"Trust In Review" 1.0 0 -13345367 true "" "plot mean [ trust ] of workers with [ inReviewWorker = 1 ] "
 
 MONITOR
 1338
@@ -500,7 +500,7 @@ MONITOR
 1429
 446
 New Patients
-count patients with [InNewPatients = 1] * 10
+count workers with [InClaimAccepted = 1] * 10
 0
 1
 11
@@ -510,8 +510,8 @@ MONITOR
 352
 1429
 397
-Review Patients
-count patients with [Inreviewpatients = 1 ] * 10
+Review Workers
+count workers with [InreviewWorker = 1 ] * 10
 0
 1
 11
@@ -566,9 +566,9 @@ true
 true
 "" "if remainder ticks 3000 =  0 [ clear-plot ]  \n\n;;if \"Reset patients\" = true [ clear-plot ] "
 PENS
-"DNA Pool 1 " 1.0 0 -16777216 true "" "plot count patients with [ InDNAPool1 = 1 ] "
-"DNA Pool 2 " 1.0 0 -7500403 true "" "plot count patients with [ InDNAPool2 = 1 ] "
-"Total DNA Costs" 1.0 0 -2674135 true "" "plot count patients with [ InDNAPool1 = 1 ] + count patients with [ InDNAPool2 = 1 ] "
+"DNA Pool 1 " 1.0 0 -16777216 true "" "plot count workers with [ InDNAPool1 = 1 ] "
+"DNA Pool 2 " 1.0 0 -7500403 true "" "plot count workers with [ InDNAPool2 = 1 ] "
+"Total DNA Costs" 1.0 0 -2674135 true "" "plot count workers with [ InDNAPool1 = 1 ] + count workers with [ InDNAPool2 = 1 ] "
 
 PLOT
 1210
@@ -784,8 +784,8 @@ MONITOR
 401
 1335
 446
-Waitlist
-count patients with [ inwaitlist = 1 ] * 10
+Lodged
+count workers with [ inLodgeClaim = 1 ] * 10
 0
 1
 11
@@ -821,7 +821,7 @@ MONITOR
 1510
 397
 DNA Total
-( count patients with [ InDNAPool1 = 1 ] +\ncount patients with [ InDNAPool2 = 1 ] ) * 10
+( count workers with [ InDNAPool1 = 1 ] +\ncount workers with [ InDNAPool2 = 1 ] ) * 10
 0
 1
 11
@@ -1100,7 +1100,7 @@ MONITOR
 1149
 649
 Patients
-count patients
+count workers
 0
 1
 11
@@ -1111,7 +1111,7 @@ MONITOR
 966
 108
 Trust
-Mean [ trust ] of patients
+Mean [ trust ] of workers
 1
 1
 11
