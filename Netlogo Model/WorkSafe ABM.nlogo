@@ -7,9 +7,9 @@ breed [ AcuteCares AcuteCare ]
 breed [ GPs GP ]
 breed [ ClaimAccepteds ClaimAccepted ]
 breed [ PreventableDeaths PreventableDeath ]
-breed [ ReviewWorkers ReviewPatient ]
+breed [ ReviewWorkers ReviewWorker ]
 breed [ Disputes Death ]
-breed [ DNAPool1s DNAPool1 ]
+breed [ Employer1s Employer1 ]
 breed [ DNAPool2s DNAPool2 ]
 breed [ UntreatedPopulations UntreatedPopulation ]
 breed [ LodgeClaims LodgeClaim ]
@@ -25,7 +25,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   InReviewWorker
   InDispute
   InUntreatedPopulation
-  InDNAPool1
+  InEmployer1
   InDNAPool2
   InLodgeClaim
   State1
@@ -36,7 +36,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   GoingtoReviewPatient
   GoingtoDispute
   GoingtoUntreatedPopulation
-  GoingtoDNAPool1
+  GoingtoEmployer1
   GoingtoDNAPool2
   GoingtoLodgeClaim
   GoingtoSAPops
@@ -58,6 +58,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   speed
   LodgeClaimExpectations
   engaged
+  Responsiveness
 ]
 
 to setup
@@ -67,23 +68,25 @@ to setup
   create-LodgeClaims 1 [ set shape "box" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color orange ]
   create-ClaimAccepteds 1 [ set shape "box" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
   create-Preventabledeaths 1 [ set shape "x"  set size 5 set label "Preventable Deaths" set xcor 19.22 set ycor 5.33 set color white]
-  create-ReviewWorkers 1 [ set shape "box"  set size 5 set label "Review Workers" set xcor 30.77 set ycor 5.33 set color blue ]
+  create-ReviewWorkers 1 [ set shape "box"  set size 5 set label "Treatment Area" set xcor 30.77 set ycor 5.33 set color blue ]
   create-Disputes 1 [ set shape "x"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color blue - 10]
-  create-DNAPool1s 1 [ set shape "box" set size 5 set label "First DNA" set xcor 45.29 set ycor 22.08 set color green - 10 ]
+  create-Employer1s 1 [ set shape "box" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color green - 10 ]
   create-DNAPool2s 1 [ set shape "box" set size 5 set label "Second DNA" set xcor 43.65 set ycor 33.52 set color red - 10 ]
   create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow - 10 ]
   create-SAPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white + 10 ]
   ask turtles [ create-links-with other turtles show label ]
   create-workers Population [ set shape "person" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1 ]
   ask workers [ resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
-    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations] ;;; made a change
-  reset-ticks
+    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ] ;;; made a change
+   reset-ticks
 end
 
 to resettrust
   if trust > 100 or trust < 1 [ set trust random-normal 70 15 ]
   if saliencyExpectation > 1 or saliencyExpectation <= 0 [ set saliencyExpectation random-normal ExpectationSaliency 10 ]
   if saliencyExperience > 1 or saliencyExperience <= 0 [ set saliencyExpectation random-normal ExpectationSaliency 10 ]
+  if health > 100 or health < 1 [ set health random-normal 50 10 ]
+  if satisfaction > 100 or satisfaction < 10 [ set satisfaction trust ]
 end
 
 to go
@@ -103,7 +106,7 @@ to go
     becomeLodgeClaim
     newtoGeneral
     newtoLodgeClaim
-    DNAFromGP
+    EmployerfromGP
     ReviewtoGeneral
     DisputetoGeneral
     TestDispute
@@ -174,15 +177,15 @@ to becomeNew
 end
 
 to becomeReview
-    if New_to_Review < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InReviewWorker = 1 ] < Review_Capacity  [
+    if Accepted_to_treatment < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InReviewWorker = 1 ] < Review_Capacity  [
       face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0  ]
     if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
       if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 ]
 
-if Acute_to_Review < random 100 and InAcuteCare = 1 and any? AcuteCares-here [
-      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0 ]
-    if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
-      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 ]
+if Acute_to_Accepted > random 100 and InAcuteCare = 1 and any? AcuteCares-here [
+      face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InAcuteCare 0 ]
+    if GoingtoClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed  ]
+      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 set GoingtoCLaimAccepted 0 ]
 end
 
 to OverCapNew
@@ -200,10 +203,10 @@ to OverCapReview
 end
 
 to becomeDNA1 ;; in here is where trust is going to affect the DNA rate
-   if (DNA1_Rate + (100 - trust)) > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
-     face one-of DNAPool1s fd speed  set GoingtoDNAPool1 1 set InReviewWorker 0 ]
-     if GoingtoDNAPool1 = 1 [ face one-of DNAPool1s fd speed ]
-    if any? DNAPool1s in-radius 1 [ move-to one-of DNAPool1s Set InDNAPool1 1 set InReviewWorker 0 set GoingtoDNAPool1 0 ]
+   if (health + (100 - trust)) > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
+     face one-of Employer1s fd speed set GoingtoEmployer1 1 set InReviewWorker 0 ]
+     if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
+    if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InReviewWorker 0 set GoingtoEmployer1 0 ]
 end
 
 to ReviewtoGeneral
@@ -227,25 +230,25 @@ to TestDispute
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
 end
 
-to DNAFromGP ;; trust is going affect the DNA rate here
-  if (DNA_from_GP_Rate + (100 - trust) ) > random 100 and InGP = 1 and any? GPs-here [
-     face one-of DNAPool1s fd speed  set GoingtoDNAPool1 1 set InGP 0 ]
-     if GoingtoDNAPool1 = 1 [ face one-of DNAPool1s fd speed ]
-    if any? DNAPool1s in-radius 1 [ move-to one-of DNAPool1s Set InDNAPool1 1 set InGP 0 set GoingtoDNAPool1 0 ]
+to EmployerFromGP ;; trust is going affect the DNA rate here
+  if (Employer_from_GP_Rate + (100 - trust) ) > random 100 and InGP = 1 and any? GPs-here [
+     face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
+     if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
+    if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
 end
 
 to becomeDNA2 ;; trust is going to affec the DNA2 rate here
-     if (DNA2_Rate + (100 - trust )) > random 100 and InDNAPool1 = 1 and any? DNAPool1s-here [
-     face one-of DNAPool2s fd speed  set GoingtoDNAPool2 1 set InDNAPool1 0 ]
+     if (DNA2_Rate + (100 - trust )) > random 100 and InEmployer1 = 1 and any? Employer1s-here [
+     face one-of DNAPool2s fd speed  set GoingtoDNAPool2 1 set InEmployer1 0 ]
      if GoingtoDNAPool2 = 1 [ face one-of DNAPool2s fd speed ]
-    if any? DNAPool2s in-radius 1 [ move-to one-of DNAPool2s Set InDNAPool2 1 set InDNAPool1 0 set GoingtoDNAPool2 0 ]
+    if any? DNAPool2s in-radius 1 [ move-to one-of DNAPool2s Set InDNAPool2 1 set InEmployer1 0 set GoingtoDNAPool2 0 ]
 end
 
 to BecomeReviewfromDNA ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
-if Trust > random 100 and InDNAPool1 = 1 and any? DNAPool1s-here [
-      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InDNAPool1 0 ]
+if Trust > random 100 and InEmployer1 = 1 and any? Employer1s-here [
+      face one-of ReviewWorkers fd speed  set GoingtoReviewPatient 1 Set InEmployer1 0 ]
     if GoingtoreviewPatient = 1 [ face one-of ReviewWorkers fd speed  ]
-      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InDNAPool1 0 set GoingtoreviewPatient 0 ]
+      if any? ReviewWorkers in-radius 1 [ move-to one-of ReviewWorkers Set InReviewWorker 1 Set InEmployer1 0 set GoingtoreviewPatient 0 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
 if Trust > random 100 and InDNAPool2 = 1 and any? DNAPool2s-here [
@@ -263,12 +266,12 @@ end
 
 to Disputesincare
 
- if Dispute_Rate_Review > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here  [
+ if (Dispute_Rate_Review + (100 - trust )) > random 100 and InReviewWorker = 1 and any? ReviewWorkers-here  [
      face one-of Disputes fd speed  set GoingtoDispute 1 set InReviewWorker 0 ]
    if GoingtoDispute = 1 [ face one-of Disputes fd speed ]
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InReviewWorker 0 set satisfaction satisfaction * .99 set trust trust * .99 ]
 
- if Dispute_Rate_LodgeClaim > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
+ if (Dispute_Rate_LodgeClaim  + (100 - trust )) > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
     face one-of Disputes fd speed set GoingtoDispute 1 set InLodgeClaim 0 ]
    if GoingtoDispute = 1 [ face one-of Disputes fd speed  ]
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .99 set trust trust * .99 ]
@@ -626,7 +629,7 @@ LodgeClaim_Delay
 LodgeClaim_Delay
 0
 100
-90.0
+0.0
 1
 1
 NIL
@@ -650,13 +653,13 @@ HORIZONTAL
 SLIDER
 69
 473
-246
-506
-New_to_Review
-New_to_Review
+254
+507
+Accepted_to_Treatment
+Accepted_to_Treatment
 1
 100
-20.0
+1.0
 1
 1
 NIL
@@ -863,7 +866,7 @@ Emergency_Pres
 Emergency_Pres
 0
 100
-17.0
+13.0
 1
 1
 NIL
@@ -874,11 +877,11 @@ SLIDER
 543
 245
 576
-Acute_to_Review
-Acute_to_Review
+Acute_to_Accepted
+Acute_to_Accepted
 0
 100
-82.0
+35.0
 1
 1
 NIL
@@ -887,10 +890,10 @@ HORIZONTAL
 SLIDER
 70
 583
-245
-616
-DNA_From_GP_Rate
-DNA_From_GP_Rate
+260
+617
+Employer_From_GP_Rate
+Employer_From_GP_Rate
 0
 100
 0.0
@@ -1322,7 +1325,7 @@ Dispute_to_General
 Dispute_to_General
 0
 100
-51.0
+4.0
 1
 1
 NIL
@@ -1337,7 +1340,7 @@ Success_Dispute_Lodge
 Success_Dispute_Lodge
 0
 100
-0.0
+37.0
 1
 1
 NIL
