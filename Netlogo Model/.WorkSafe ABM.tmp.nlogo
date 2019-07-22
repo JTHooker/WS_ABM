@@ -115,7 +115,7 @@ to go
     ToEmployerfromTreatment
     ReturntoWork
     OccRehabSupport
-    WorkWithOccRehab
+    becomeNoRecovery
     UntreatedReEnter
     EmployernotReady
     becomeLodgeClaim
@@ -280,7 +280,7 @@ if Trust > random 100 and InRTW = 1 and any? RTWs-here [
 end
 
 to OccRehabSupport
-    if _Rate > random 100 and InRTW = 1 and any? RTWs-here [
+    if Occ_Rehab_Support_ > random 100 and InRTW = 1 and any? RTWs-here [
      face one-of OccRehabProviders fd speed  set GoingtoOccRehabProvider 1 Set InRTW 0 ]
      if GoingtoOccRehabProvider = 1 [ face one-of OccRehabProviders fd speed ]
     if any? OccRehabProviders in-radius 1 [ move-to one-of OccRehabProviders Set InRTW 0 set InOccRehabProvider 1 set GoingtoOccRehabProvider 0 ]
@@ -299,17 +299,12 @@ to Disputesincare
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
 end
 
-to WorkWithOccRehab
+to BecomeNoRecovery
   if InOccRehabProvider = 1 and any? OccRehabProviders-here [
      face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inOccRehabProvider 0  ]
    if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
     if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inOccRehabProvider 0 set InNoRecovery 1 die ]
 end
-
-
-
-
-
 
 to CountNoRecoverys
   set NoRecoverycount ( count Workers with [ goingtoNoRecovery = 1 ] )
@@ -411,11 +406,11 @@ end
 GRAPHICS-WINDOW
 315
 10
-834
-530
+854
+550
 -1
 -1
-6.961
+7.24
 1
 10
 1
@@ -777,10 +772,10 @@ HORIZONTAL
 SLIDER
 60
 728
-235
-761
-Active_Discharge_Rate
-Active_Discharge_Rate
+258
+763
+Occ_Rehab_Support_Rate
+Occ_Rehab_Support_Rate
 0
 100
 2.0

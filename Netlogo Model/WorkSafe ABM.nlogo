@@ -280,7 +280,7 @@ if Trust > random 100 and InRTW = 1 and any? RTWs-here [
 end
 
 to OccRehabSupport
-    if Active_Discharge_Rate > random 100 and InRTW = 1 and any? RTWs-here [
+    if Occ_Rehab_Support_Need > random 100 and InRTW = 1 and any? RTWs-here [
      face one-of OccRehabProviders fd speed  set GoingtoOccRehabProvider 1 Set InRTW 0 ]
      if GoingtoOccRehabProvider = 1 [ face one-of OccRehabProviders fd speed ]
     if any? OccRehabProviders in-radius 1 [ move-to one-of OccRehabProviders Set InRTW 0 set InOccRehabProvider 1 set GoingtoOccRehabProvider 0 ]
@@ -406,11 +406,11 @@ end
 GRAPHICS-WINDOW
 315
 10
-834
-530
+854
+550
 -1
 -1
-6.961
+7.24
 1
 10
 1
@@ -772,10 +772,10 @@ HORIZONTAL
 SLIDER
 60
 728
-235
-761
-Active_Discharge_Rate
-Active_Discharge_Rate
+260
+763
+Occ_Rehab_Support_Need
+Occ_Rehab_Support_Need
 0
 100
 2.0
