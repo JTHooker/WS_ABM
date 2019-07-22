@@ -1,5 +1,5 @@
 globals [ preventabledeathcount
-  naturaldeathcount]
+  DisputeCount]
 
 
 breed [ VicPops VicPop ]
@@ -40,6 +40,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   GoingtoRTW
   GoingtoLodgeClaim
   GoingtoVicPops
+  InSystem
   Trust
   Memory
   memory_Span
@@ -81,7 +82,7 @@ to setup
   create-VicPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white + 10 ]
   ask turtles [ create-links-with other turtles show label ]
   create-workers Population [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1 ]
-  ask workers [ resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
+  ask workers [ set trust random-normal 90 2 set satisfaction random-normal 70 5 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ] ;;; made a change
    reset-ticks
 end
@@ -104,7 +105,7 @@ to go
     AccessTreatment
     ToEmployerfromTreatment
     ReturntoWork
-    DNA2decisions
+    RTWdecisions
     becomePreventableDeath
     UntreatedReEnter
     EmployernotReady
@@ -112,7 +113,7 @@ to go
     newtoGeneral
     newtoLodgeClaim
     EmployerfromGP
-    ReviewtoGeneral
+    TreatmentToGeneral
     DisputetoGeneral
     TestDispute
     Captrust
@@ -178,7 +179,7 @@ to BecomeAcceptedClaim
   if LodgeClaim_Delay < random 100 and InLodgeClaim = 1 and any? LodgeClaims-here and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < New_Capacity [
       face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
      if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
-      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 ]
+      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 set InSystem 1 ]
 end
 
 to AccessTreatment
@@ -222,7 +223,7 @@ to EmployerFromGP ;; trust is going affect the DNA rate here
 end
 
 
-to ReviewtoGeneral
+to TreatmentToGeneral
   if Review_General > random 100 and InTreatment = 1 and any? TreatmentCentres-here [
      face one-of VicPops fd speed  set GoingtoVicPops 1 set InTreatment 0  ] ;;DNA Rate is inversely proportional to trust
      if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
@@ -265,7 +266,7 @@ if Trust > random 100 and InRTW = 1 and any? RTWs-here [
       if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
 end
 
-to DNA2Decisions
+to RTWDecisions
     if Active_Discharge_Rate > random 100 and InRTW = 1 and any? RTWs-here [
      face one-of UntreatedPopulations fd speed  set GoingtoUntreatedPopulation 1 Set InRTW 0 ]
      if GoingtoUntreatedPopulation = 1 [ face one-of UntreatedPopulations fd speed ]
@@ -295,7 +296,7 @@ end
 
 to countpreventabledeaths
   set preventabledeathcount ( count Workers with [ goingtopreventabledeath = 1 ] )
-  set naturaldeathcount ( count Workers with [ GoingtoDispute = 1 ] )
+  set DisputeCount ( count Workers with [ GoingtoDispute = 1 ] )
 
 end
 
@@ -508,14 +509,14 @@ true
 true
 "" "if ticks = 100 [ clear-plot ] \n\nif \"Reset Patients\" = true [ clear-plot ] "
 PENS
-"New Patients" 1.0 0 -11085214 true "" "plot count workers with [ inClaimAccepted = 1 ] "
-"Review Patients" 1.0 0 -14454117 true "" "plot count workers with [ inreviewWorker = 1 ] "
+"New Claimants" 1.0 0 -11085214 true "" "plot count workers with [ inClaimAccepted = 1 ] "
+"TreatedPatients" 1.0 0 -14454117 true "" "plot count workers with [ inTreatment = 1 ] "
 "With GP" 1.0 0 -2674135 true "" "plot count workers with [ InGP = 1 ] "
-"In Waitlist" 1.0 0 -16777216 true "" "plot count workers with [ inLodgeClaim = 1 ] "
-"Trust" 1.0 0 -7500403 true "" "plot mean [ trust ] of workers"
+"Waiting to Lodge" 1.0 0 -16777216 true "" "plot count workers with [ inLodgeClaim = 1 ] "
+"Trust of Accepted" 1.0 0 -7500403 true "" "plot mean [ trust ] of workers with [ inSystem = 1 ] "
 "Trust In Waitlist" 1.0 0 -955883 true "" "plot mean [ trust ] of workers with [ inLodgeClaim = 1 ] "
 "Trust In New" 1.0 0 -1184463 true "" "plot mean [ trust ] of workers with [ inClaimAccepted = 1 ] "
-"Trust In Review" 1.0 0 -13345367 true "" "plot mean [ trust ] of workers with [ inReviewWorker = 1 ] "
+"Trust In Review" 1.0 0 -13345367 true "" "plot mean [ trust ] of workers with [ inTreatment = 1 ] "
 
 MONITOR
 1338
@@ -577,7 +578,7 @@ PLOT
 878
 352
 1203
-573
+472
 DNA States
 NIL
 NIL
@@ -589,16 +590,15 @@ true
 true
 "" "if remainder ticks 3000 =  0 [ clear-plot ]  \n\n;;if \"Reset patients\" = true [ clear-plot ] "
 PENS
-"DNA Pool 1 " 1.0 0 -16777216 true "" "plot count workers with [ InEmployer1 = 1 ] "
-"DNA Pool 2 " 1.0 0 -7500403 true "" "plot count workers with [ InEmployer1 = 1 ] "
-"Total DNA Costs" 1.0 0 -2674135 true "" "plot count workers with [ InEmployer1 = 1 ] + count workers with [ InDNAPool2 = 1 ] "
+"Pre Employer" 1.0 0 -16777216 true "" "plot count workers with [ InEmployer1 = 1 ] "
+"RTW Pool" 1.0 0 -7500403 true "" "plot count workers with [ InRTW = 1 ] "
 
 PLOT
-1210
-479
-1646
-599
-Deaths
+880
+477
+1203
+597
+Unresolved Disputes
 NIL
 NIL
 0.0
@@ -609,8 +609,7 @@ true
 true
 "" "if ticks = 100 [ clear-plot ] \nif remainder ticks 3001 =  0 [ clear-plot ]  \n\n;; if \"Reset Patients\" = true [ clear-plot ] "
 PENS
-"Preventable Deaths" 1.0 0 -14070903 true "" "plot preventabledeathcount"
-"Natural Deaths" 1.0 0 -2674135 true "" "plot naturaldeathcount"
+"Disputes" 1.0 0 -2674135 true "" "plot DisputeCount"
 
 SLIDER
 20
@@ -658,10 +657,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-69
-473
-244
-506
+61
+465
+236
+498
 Accepted_to_Treatment
 Accepted_to_Treatment
 1
@@ -673,10 +672,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-67
-264
-247
-297
+59
+256
+239
+289
 DNA1_to_Review_Rate
 DNA1_to_Review_Rate
 0
@@ -688,10 +687,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-67
-299
-249
-332
+59
+291
+241
+324
 RTW_to_General_Population
 RTW_to_General_Population
 0
@@ -733,10 +732,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-67
-334
-246
-367
+59
+326
+238
+359
 Death_Rate_Untreated
 Death_Rate_Untreated
 0
@@ -748,10 +747,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-68
-368
-246
-401
+60
+360
+238
+393
 Dispute_Rate_LodgeClaim
 Dispute_Rate_LodgeClaim
 0
@@ -763,10 +762,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1669
-100
-1844
-133
+60
+728
+235
+761
 Active_Discharge_Rate
 Active_Discharge_Rate
 0
@@ -785,13 +784,13 @@ CHOOSER
 Injured_Workers
 Injured_Workers
 1 2 3 4 5 10 20
-4
+5
 
 SLIDER
-67
-407
-245
-440
+59
+399
+237
+432
 Dispute_Rate_Review
 Dispute_Rate_Review
 0
@@ -814,10 +813,10 @@ count workers with [ inLodgeClaim = 1 ] * 10
 11
 
 SLIDER
-69
-441
-245
-474
+61
+433
+237
+466
 Return_to_General
 Return_to_General
 0
@@ -838,17 +837,6 @@ Rate at which patients DNA\nat each level
 0.0
 1
 
-MONITOR
-1433
-352
-1510
-397
-DNA Total
-( count workers with [ InEmployer1 = 1 ] +\ncount workers with [ InDNAPool2 = 1 ] ) * 10
-0
-1
-11
-
 SLIDER
 149
 190
@@ -865,10 +853,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-69
-508
-245
-541
+61
+500
+237
+533
 Emergency_Pres
 Emergency_Pres
 0
@@ -880,10 +868,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-69
-543
-248
-576
+61
+535
+240
+568
 Emergency_to_Accepted
 Emergency_to_Accepted
 0
@@ -895,10 +883,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-70
-583
-245
-616
+62
+575
+237
+608
 Employer_From_GP_Rate
 Employer_From_GP_Rate
 0
@@ -987,10 +975,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-882
-579
-1055
-612
+878
+610
+1051
+643
 ExperienceSaliency
 ExperienceSaliency
 0
@@ -1002,10 +990,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-883
-615
-1056
-648
+879
+646
+1052
+679
 ExpectationSaliency
 ExpectationSaliency
 0
@@ -1034,10 +1022,10 @@ NIL
 1
 
 SLIDER
-70
-621
-243
-654
+62
+613
+235
+646
 New_General
 New_General
 0
@@ -1049,10 +1037,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1669
-24
-1842
-57
+60
+652
+233
+685
 New_LodgeClaim
 New_LodgeClaim
 0
@@ -1064,10 +1052,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1670
-62
-1843
-95
+61
+690
+234
+723
 Review_General
 Review_General
 0
@@ -1123,7 +1111,7 @@ MONITOR
 966
 108
 Trust
-Mean [ trust ] of workers
+Mean [ trust ] of workers with [ InSystem = 1 ]
 1
 1
 11
@@ -1134,7 +1122,7 @@ BUTTON
 590
 751
 Day_Off
-\nif remainder ticks Processing_Capacity = 0 [ \nset Review_Capacity 0 ]\n\n\nif remainder ticks 50 = 1 [ \nset Review_Capacity 30 ]\n
+\nif remainder ticks Processing_Capacity = 0 [ \nset Review_Capacity 0 ]\n\n\nif remainder ticks Processing_Capacity = 1 [ \nset Review_Capacity 30 ]\n
 T
 1
 T
@@ -1201,7 +1189,7 @@ OverBookingRate
 OverBookingRate
 0
 2
-1.0
+1.57
 .01
 1
 NIL
@@ -1218,21 +1206,21 @@ No Barrier to High Barrier
 1
 
 MONITOR
-1435
-402
-1511
-447
-Trust
-mean [ trust ] of workers with [ InLodgeClaim = 1 ]
+1439
+354
+1589
+399
+Trust of Accepted Claims
+mean [ trust ] of workers with [ InSystem = 1 ]
 1
 1
 11
 
 PLOT
-1213
-605
-1426
-755
+1064
+612
+1277
+762
 Trust histogram
 NIL
 NIL
@@ -1249,10 +1237,10 @@ PENS
 "Satisfaction" 1.0 0 -14439633 true "" "histogram [ Satisfaction ] of workers"
 
 SLIDER
-885
-655
-1058
-688
+881
+686
+1054
+719
 ManageExpectations
 ManageExpectations
 0
@@ -1264,10 +1252,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-885
-695
-1060
-728
+881
+726
+1056
+759
 Error_of_Estimate
 Error_of_Estimate
 0
@@ -1279,10 +1267,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1430
-605
-1647
-755
+1212
+475
+1429
+599
 Association
 NIL
 NIL
@@ -1294,13 +1282,13 @@ true
 false
 "" ""
 PENS
-"Association" 1.0 0 -16777216 true "" "plot mean [ newassociationstrength ] of workers"
+"Association" 1.0 0 -16777216 true "" " plot mean [ newassociationstrength * 10 ] of workers "
 
 PLOT
-707
-737
-1215
-887
+1286
+612
+1650
+762
 Overall Trust
 NIL
 NIL
@@ -1309,16 +1297,17 @@ NIL
 40.0
 100.0
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [ trust ] of workers"
+"Mean Trust" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers ]"
+"Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers ] "
 
 SLIDER
-1669
-139
-1842
-172
+60
+765
+235
+798
 Dispute_to_General
 Dispute_to_General
 0
@@ -1330,10 +1319,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-1673
-179
-1843
-212
+59
+803
+235
+836
 Success_Dispute_Lodge
 Success_Dispute_Lodge
 0
@@ -1353,7 +1342,7 @@ Processing_Capacity
 Processing_Capacity
 0
 100
-92.0
+15.0
 1
 1
 NIL
