@@ -69,26 +69,27 @@ Employer1s-own [
 
 to setup
   clear-all
-  create-GPs 1 [ set shape "box" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color red]
-  create-AcuteCares 1 [ set shape "box" set size 5 set label "Emergency Care" set xcor 6.35 set ycor 33.52 set color green ]
-  create-LodgeClaims 1 [ set shape "box" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color orange ]
-  create-ClaimAccepteds 1 [ set shape "box" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
+  ask patches [ set pcolor green ]
+  create-GPs 1 [ set shape "person doctor" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color red]
+  create-AcuteCares 1 [ set shape "ambulance" set size 5 set label "Emergency Care" set xcor 6.35 set ycor 33.52 set color white ]
+  create-LodgeClaims 1 [ set shape "clock" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color orange ]
+  create-ClaimAccepteds 1 [ set shape "computer workstation" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
   create-Preventabledeaths 1 [ set shape "x"  set size 5 set label "Preventable Deaths" set xcor 19.22 set ycor 5.33 set color white]
-  create-TreatmentCentres 1 [ set shape "box"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color blue ]
-  create-Disputes 1 [ set shape "x"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color blue - 10]
-  create-Employer1s 1 [ set shape "box" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color green - 10 set readiness random-normal 50 10 ]
-  create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red - 10 ]
-  create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow - 10 ]
-  create-VicPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white + 10 ]
+  create-TreatmentCentres 1 [ set shape "building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color white ]
+  create-Disputes 1 [ set shape "x"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
+  create-Employer1s 1 [ set shape "factory" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color grey set readiness random-normal 50 10 ]
+  create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red ]
+  create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow ]
+  create-VicPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
   ask turtles [ create-links-with other turtles show label ]
-  create-workers Population [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1 ]
-  ask workers [ set trust random-normal 90 2 set satisfaction random-normal 70 5 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
+  create-workers Population [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
+  ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ] ;;; made a change
    reset-ticks
 end
 
 to resettrust
-  if trust > 100 or trust < 1 [ set trust random-normal 70 15 ]
+  if trust > 100 or trust < 1 [ set trust random-normal 80 3 ]
   if saliencyExpectation > 1 or saliencyExpectation <= 0 [ set saliencyExpectation random-normal ExpectationSaliency 10 ]
   if saliencyExperience > 1 or saliencyExperience <= 0 [ set saliencyExpectation random-normal ExpectationSaliency 10 ]
   if health > 100 or health < 1 [ set health random-normal 50 10 ]
@@ -98,8 +99,8 @@ end
 to go
   ask workers [
     initialise
-    gpreferral
-    emergency
+    GPreferral
+    Emergency
     Disputesincare
     BecomeAcceptedClaim
     AccessTreatment
@@ -110,22 +111,22 @@ to go
     UntreatedReEnter
     EmployernotReady
     becomeLodgeClaim
-    newtoGeneral
-    newtoLodgeClaim
+    NewtoLodgeClaim
     EmployerfromGP
     TreatmentToGeneral
     DisputetoGeneral
     TestDispute
     Captrust
     calculateTrustFactor
-    rememberevents
-    resetinitial
-    limitInitialAssociation
+    Rememberevents
+    Resetinitial
+    LimitInitialAssociation
     OverCapReview
     OverCapNew
     SocialEpi
     EngageExpectations
-    colourme
+    Colourme
+    RemoveHealthyWorkers
   ]
 
 
@@ -156,7 +157,7 @@ to gpreferral ;; individuals emerging from the general population into GPs
        if any? GPs in-radius 1 [ move-to one-of GPs set InGP 1 set goingtoGP 0 set state1 0 ]
 end
 
-to emergency ;; individuals emerging from the general population into emergency areas of hospitals
+to Emergency ;; individuals emerging from the general population into emergency areas of hospitals
     if Emergency_Pres < random 100 and state1 = 1 and InAcuteCare = 0 and any? VicPops-here [
       face one-of AcuteCares fd speed  set GoingtoAcuteCare 1 set State1 0 ]
        if GoingtoAcuteCare = 1 [ face one-of AcuteCares fd speed ]
@@ -164,12 +165,12 @@ to emergency ;; individuals emerging from the general population into emergency 
 end
 
 to BecomeLodgeClaim ;;
-     if Acute_Care_Barrier < random 100 and InAcuteCare = 1 and any? AcuteCares-here [
-      face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InAcuteCare 0 ]
-    if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
+     if Acute_Care_Barrier < random 100 and InAcuteCare = 1 and any? AcuteCares-here and health < Claim_Threshold [
+    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InAcuteCare 0 ]
+   if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InAcuteCare 0 set GoingtoLodgeClaim 0  ]
 
-    if GP_Referral_Barrier < random 100 and InGP = 1 and any? GPs-here [
+    if GP_Referral_Barrier < random 100 and InGP = 1 and any? GPs-here and health < Claim_Threshold [
       face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InGP 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InGP 0 set GoingtoLodgeClaim 0  ]
@@ -186,7 +187,7 @@ to AccessTreatment
     if Accepted_to_treatment < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InTreatment = 1 ] < Review_Capacity  [
       face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0  ]
     if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 set health health * 1.01 ]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 set health ( health * 1.01 * Responsiveness )]
 
 if Emergency_to_Accepted > random 100 and InAcuteCare = 1 and any? AcuteCares-here [
       face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InAcuteCare 0 ]
@@ -222,7 +223,6 @@ to EmployerFromGP ;; trust is going affect the DNA rate here
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
 end
 
-
 to TreatmentToGeneral
   if Review_General > random 100 and InTreatment = 1 and any? TreatmentCentres-here [
      face one-of VicPops fd speed  set GoingtoVicPops 1 set InTreatment 0  ] ;;DNA Rate is inversely proportional to trust
@@ -233,10 +233,8 @@ end
 to TestDispute
    ifelse Success_Dispute_Lodge > random 100 and InDispute = 1 and any? Disputes-here [
      face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0  ]   [ DisputetoGeneral ]
-
     if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed ]
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
-
 end
 
 to DisputetoGeneral
@@ -278,13 +276,12 @@ to Disputesincare
  if (Dispute_Rate_LodgeClaim  + (100 - trust )) > random 1000 and InLodgeClaim = 1 and any? LodgeClaims-here [
     face one-of Disputes fd speed set GoingtoDispute 1 set InLodgeClaim 0 ]
    if GoingtoDispute = 1 [ face one-of Disputes fd speed  ]
-    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .99 set trust trust * .99 ]
+    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .99 set trust trust * .9 ]
 
   if (Dispute_Rate_Review + (100 - trust )) > random 100 and InTreatment = 1 and any? TreatmentCentres-here  [
      face one-of Disputes fd speed  set GoingtoDispute 1 set InTreatment 0 ]
    if GoingtoDispute = 1 [ face one-of Disputes fd speed ]
-    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .99 ]
-
+    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .9 ]
 end
 
 to becomePreventableDeath
@@ -310,13 +307,6 @@ if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? Untreat
      face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 set inUntreatedPopulation 0 ]
    if GoingtoReviewPatient = 1 [ face one-of TreatmentCentres fd speed ]
     if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoReviewPatient 0 set inUntreatedPopulation 0 ]
-end
-
-to NewtoGeneral
-  if New_General > random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
-     face one-of VicPops fd speed  set GoingtoVicPops 1 set InClaimAccepted 0 ]
-  if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
-    if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set InClaimAccepted 0 die ]
 end
 
 to NewtoLodgeClaim
@@ -375,12 +365,12 @@ to resetinitial
 end
 
 to createClaimAccepteds
- if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1
-    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
-    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
+ if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color white set speed random-normal 1 .1
+    resettrust set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
+    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10
+   ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
   ]
 end
-
 
 to limitInitialAssociation
   if initialassociationstrength < InitialV [ set initialassociationstrength InitialV ]
@@ -392,7 +382,11 @@ to SocialEpi
 end
 
 to colourme
-  if trust < 0 [ set color green ]
+  if health > Recovery_Threshold [ set color blue ]
+end
+
+to RemoveHealthyWorkers
+  if InSystem = 0 and health > Claim_Threshold [ die ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -635,7 +629,7 @@ LodgeClaim_Delay
 LodgeClaim_Delay
 0
 100
-0.0
+10.0
 1
 1
 NIL
@@ -784,7 +778,7 @@ CHOOSER
 Injured_Workers
 Injured_Workers
 1 2 3 4 5 10 20
-5
+6
 
 SLIDER
 59
@@ -968,7 +962,7 @@ InitialV
 InitialV
 0
 1
-0.02
+0.5
 .01
 1
 NIL
@@ -1045,7 +1039,7 @@ New_LodgeClaim
 New_LodgeClaim
 0
 100
-42.0
+30.0
 1
 1
 NIL
@@ -1342,7 +1336,37 @@ Processing_Capacity
 Processing_Capacity
 0
 100
-15.0
+7.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+303
+767
+475
+800
+Recovery_Threshold
+Recovery_Threshold
+0
+100
+85.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+306
+808
+478
+841
+Claim_Threshold
+Claim_Threshold
+0
+100
+75.0
 1
 1
 NIL
@@ -1360,6 +1384,27 @@ airplane
 true
 0
 Polygon -7500403 true true 150 0 135 15 120 60 120 105 15 165 15 195 120 180 135 240 105 270 120 285 150 270 180 285 210 270 165 240 180 180 285 195 285 165 180 105 180 60 165 15
+
+ambulance
+false
+0
+Rectangle -7500403 true true 30 90 210 195
+Polygon -7500403 true true 296 190 296 150 259 134 244 104 210 105 210 190
+Rectangle -1 true false 195 60 195 105
+Polygon -16777216 true false 238 112 252 141 219 141 218 112
+Circle -16777216 true false 234 174 42
+Circle -16777216 true false 69 174 42
+Rectangle -1 true false 288 158 297 173
+Rectangle -1184463 true false 289 180 298 172
+Rectangle -2674135 true false 29 151 298 158
+Line -16777216 false 210 90 210 195
+Rectangle -16777216 true false 83 116 128 133
+Rectangle -16777216 true false 153 111 176 134
+Line -7500403 true 165 105 165 135
+Rectangle -7500403 true true 14 186 33 195
+Line -13345367 false 45 135 75 120
+Line -13345367 false 75 135 45 120
+Line -13345367 false 60 112 60 142
 
 arrow
 true
@@ -1384,6 +1429,38 @@ Circle -7500403 true true 110 127 80
 Circle -7500403 true true 110 75 80
 Line -7500403 true 150 100 80 30
 Line -7500403 true 150 100 220 30
+
+building institution
+false
+0
+Rectangle -7500403 true true 0 60 300 270
+Rectangle -16777216 true false 130 196 168 256
+Rectangle -16777216 false false 0 255 300 270
+Polygon -7500403 true true 0 60 150 15 300 60
+Polygon -16777216 false false 0 60 150 15 300 60
+Circle -1 true false 135 26 30
+Circle -16777216 false false 135 25 30
+Rectangle -16777216 false false 0 60 300 75
+Rectangle -16777216 false false 218 75 255 90
+Rectangle -16777216 false false 218 240 255 255
+Rectangle -16777216 false false 224 90 249 240
+Rectangle -16777216 false false 45 75 82 90
+Rectangle -16777216 false false 45 240 82 255
+Rectangle -16777216 false false 51 90 76 240
+Rectangle -16777216 false false 90 240 127 255
+Rectangle -16777216 false false 90 75 127 90
+Rectangle -16777216 false false 96 90 121 240
+Rectangle -16777216 false false 179 90 204 240
+Rectangle -16777216 false false 173 75 210 90
+Rectangle -16777216 false false 173 240 210 255
+Rectangle -16777216 false false 269 90 294 240
+Rectangle -16777216 false false 263 75 300 90
+Rectangle -16777216 false false 263 240 300 255
+Rectangle -16777216 false false 0 240 37 255
+Rectangle -16777216 false false 6 90 31 240
+Rectangle -16777216 false false 0 75 37 90
+Line -16777216 false 112 260 184 260
+Line -16777216 false 105 265 196 265
 
 butterfly
 true
@@ -1417,6 +1494,23 @@ false
 0
 Circle -7500403 true true 0 0 300
 Circle -16777216 true false 30 30 240
+
+clock
+true
+0
+Circle -7500403 true true 30 30 240
+Polygon -16777216 true false 150 31 128 75 143 75 143 150 158 150 158 75 173 75
+Circle -16777216 true false 135 135 30
+
+computer workstation
+false
+0
+Rectangle -7500403 true true 60 45 240 180
+Polygon -7500403 true true 90 180 105 195 135 195 135 210 165 210 165 195 195 195 210 180
+Rectangle -16777216 true false 75 60 225 165
+Rectangle -7500403 true true 45 210 255 255
+Rectangle -10899396 true false 249 223 237 217
+Line -16777216 false 60 225 120 225
 
 cow
 false
@@ -1458,6 +1552,26 @@ Circle -7500403 true true 8 8 285
 Circle -16777216 true false 60 75 60
 Circle -16777216 true false 180 75 60
 Polygon -16777216 true false 150 168 90 184 62 210 47 232 67 244 90 220 109 205 150 198 192 205 210 220 227 242 251 229 236 206 212 183
+
+factory
+false
+0
+Rectangle -7500403 true true 76 194 285 270
+Rectangle -7500403 true true 36 95 59 231
+Rectangle -16777216 true false 90 210 270 240
+Line -7500403 true 90 195 90 255
+Line -7500403 true 120 195 120 255
+Line -7500403 true 150 195 150 240
+Line -7500403 true 180 195 180 255
+Line -7500403 true 210 210 210 240
+Line -7500403 true 240 210 240 240
+Line -7500403 true 90 225 270 225
+Circle -1 true false 37 73 32
+Circle -1 true false 55 38 54
+Circle -1 true false 96 21 42
+Circle -1 true false 105 40 32
+Circle -1 true false 129 19 42
+Rectangle -7500403 true true 14 228 78 270
 
 fish
 false
@@ -1530,6 +1644,25 @@ Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300
 Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105
 Polygon -7500403 true true 105 90 60 150 75 180 135 105
+
+person doctor
+false
+0
+Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 195 90
+Polygon -13345367 true false 135 90 150 105 135 135 150 150 165 135 150 105 165 90
+Polygon -7500403 true true 105 90 60 195 90 210 135 105
+Polygon -7500403 true true 195 90 240 195 210 210 165 105
+Circle -7500403 true true 110 5 80
+Rectangle -7500403 true true 127 79 172 94
+Polygon -1 true false 105 90 60 195 90 210 114 156 120 195 90 270 210 270 180 195 186 155 210 210 240 195 195 90 165 90 150 150 135 90
+Line -16777216 false 150 148 150 270
+Line -16777216 false 196 90 151 149
+Line -16777216 false 104 90 149 149
+Circle -1 true false 180 0 30
+Line -16777216 false 180 15 120 15
+Line -16777216 false 150 195 165 195
+Line -16777216 false 150 240 165 240
+Line -16777216 false 150 150 165 150
 
 plant
 false
