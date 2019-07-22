@@ -100,9 +100,9 @@ to go
     gpreferral
     emergency
     Disputesincare
-    becomenew
-    becomeReview
-    ToEmployer
+    BecomeAcceptedClaim
+    AccessTreatment
+    ToEmployerfromTreatment
     ReturntoWork
     DNA2decisions
     becomePreventableDeath
@@ -162,7 +162,7 @@ to emergency ;; individuals emerging from the general population into emergency 
         if any? AcuteCares in-radius 1 [ move-to one-of AcuteCares set InAcuteCare 1 set InGP 0 set GoingtoAcuteCare 0 ]
 end
 
-to becomeLodgeClaim ;;
+to BecomeLodgeClaim ;;
      if Acute_Care_Barrier < random 100 and InAcuteCare = 1 and any? AcuteCares-here [
       face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InAcuteCare 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
@@ -174,14 +174,14 @@ to becomeLodgeClaim ;;
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InGP 0 set GoingtoLodgeClaim 0  ]
 end
 
-to becomeNew
+to BecomeAcceptedClaim
   if LodgeClaim_Delay < random 100 and InLodgeClaim = 1 and any? LodgeClaims-here and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < New_Capacity [
       face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
      if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
       if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 ]
 end
 
-to becomeReview
+to AccessTreatment
     if Accepted_to_treatment < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InTreatment = 1 ] < Review_Capacity  [
       face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0  ]
     if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
@@ -207,12 +207,20 @@ to OverCapReview
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InTreatment 0 set GoingtoLodgeClaim 0  ]
 end
 
-to ToEmployer ;; in here is where trust is going to affect the DNA rate
+to ToEmployerfromTreatment ;; in here is where trust is going to affect the DNA rate
    if (health + (100 - trust)) > random 100 and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
 end
+
+to EmployerFromGP ;; trust is going affect the DNA rate here
+  if (Employer_from_GP_Rate + (100 - trust) ) > random 100 and InGP = 1 and any? GPs-here and health > 50 [
+     face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
+     if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
+    if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
+end
+
 
 to ReviewtoGeneral
   if Review_General > random 100 and InTreatment = 1 and any? TreatmentCentres-here [
@@ -235,13 +243,6 @@ to DisputetoGeneral
     face one-of VicPops fd speed  set GoingtoVicPops 1 set InDispute 0  ]
      if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
     if any? VicPops in-radius 1 [ move-to one-of VicPops set InTreatment 0 set GoingtoVicPops 0 die ]
-end
-
-to EmployerFromGP ;; trust is going affect the DNA rate here
-  if (Employer_from_GP_Rate + (100 - trust) ) > random 100 and InGP = 1 and any? GPs-here [
-     face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
-     if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
-    if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
 end
 
 to ReturntoWork ;; trust is going to affec the DNA2 rate here
@@ -784,7 +785,7 @@ CHOOSER
 Injured_Workers
 Injured_Workers
 1 2 3 4 5 10 20
-6
+4
 
 SLIDER
 67
@@ -979,7 +980,7 @@ InitialV
 InitialV
 0
 1
-0.0
+0.02
 .01
 1
 NIL
@@ -1117,17 +1118,6 @@ New_Capacity
 Number
 
 MONITOR
-1090
-604
-1149
-649
-Patients
-count workers
-0
-1
-11
-
-MONITOR
 908
 63
 966
@@ -1144,7 +1134,7 @@ BUTTON
 590
 751
 Day_Off
-\nif remainder ticks 50 = 0 [ \nset Review_Capacity 0 ]\n\n\nif remainder ticks 50 = 1 [ \nset Review_Capacity 30 ]\n
+\nif remainder ticks Processing_Capacity = 0 [ \nset Review_Capacity 0 ]\n\n\nif remainder ticks 50 = 1 [ \nset Review_Capacity 30 ]\n
 T
 1
 T
@@ -1161,7 +1151,7 @@ BUTTON
 688
 751
 Day_Off_New
-if remainder ticks 50 = 0 [ \nset New_Capacity 0 ]\n\nif remainder ticks 50 = 1 [ \nset New_Capacity 60 ]
+if remainder ticks Processing_Capacity = 0 [ \nset New_Capacity 0 ]\n\nif remainder ticks Processing_Capacity = 1 [ \nset New_Capacity 60 ]
 T
 1
 T
@@ -1251,10 +1241,12 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "histogram [ trust ] of workers"
+"Trust" 1.0 0 -5298144 true "" "histogram [ trust ] of workers"
+"Health" 1.0 0 -14070903 true "" "histogram [ health ] of workers"
+"Satisfaction" 1.0 0 -14439633 true "" "histogram [ Satisfaction ] of workers"
 
 SLIDER
 885
@@ -1347,6 +1339,21 @@ Success_Dispute_Lodge
 0
 100
 51.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+505
+757
+677
+790
+Processing_Capacity
+Processing_Capacity
+0
+100
+92.0
 1
 1
 NIL
