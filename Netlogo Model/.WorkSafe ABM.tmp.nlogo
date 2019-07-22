@@ -1,4 +1,4 @@
-globals [ preventabledeathcount
+globals [ NoRecoverycount
   DisputeCount]
 
 
@@ -6,7 +6,7 @@ breed [ VicPops VicPop ]
 breed [ AcuteCares AcuteCare ]
 breed [ GPs GP ]
 breed [ ClaimAccepteds ClaimAccepted ]
-breed [ PreventableDeaths PreventableDeath ]
+breed [ NoRecoverys NoRecovery ]
 breed [ TreatmentCentres TreatmentCentre ]
 breed [ Disputes Death ]
 breed [ Employer1s Employer1 ]
@@ -20,7 +20,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   motivation
   InGP
   InAcuteCare
-  InPreventableDeath
+  InNoRecovery
   InClaimAccepted
   InTreatment
   InDispute
@@ -31,9 +31,9 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   State1
   GoingtoGP
   GoingtoAcuteCare
-  GoingtoPreventableDeath
+  GoingtoNoRecovery
   GoingtoClaimAccepted
-  GoingtoReviewPatient
+  GoingtoTreatment
   GoingtoDispute
   GoingtoUntreatedPopulation
   GoingtoEmployer1
@@ -70,17 +70,17 @@ Employer1s-own [
 to setup
   clear-all
   ask patches [ set pcolor green ]
-  create-GPs 1 [ set shape "person doctor" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color red]
+  create-GPs 1 [ set shape "person doctor" set size 3 set label "GP" set xcor 13.92 set ycor 42.25 set color brown]
   create-AcuteCares 1 [ set shape "ambulance" set size 5 set label "Emergency Care" set xcor 6.35 set ycor 33.52 set color white ]
   create-LodgeClaims 1 [ set shape "clock" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color orange ]
   create-ClaimAccepteds 1 [ set shape "computer workstation" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
-  create-Preventabledeaths 1 [ set shape "x"  set size 5 set label "Preventable Deaths" set xcor 19.22 set ycor 5.33 set color white]
-  create-TreatmentCentres 1 [ set shape "building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color white ]
-  create-Disputes 1 [ set shape "x"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
+  create-NoRecoverys 1 [ set shape "Garbage Can"  set size 5 set label "No Recovery" set xcor 19.22 set ycor 5.33 set color white]
+  create-TreatmentCentres 1 [ set shape "Building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color white ]
+  create-Disputes 1 [ set shape "Exclamation"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
   create-Employer1s 1 [ set shape "factory" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color grey set readiness random-normal 50 10 ]
   create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red ]
   create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow ]
-  create-VicPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
+  create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
   ask turtles [ create-links-with other turtles show label ]
   create-workers Population [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
@@ -107,7 +107,7 @@ to go
     ToEmployerfromTreatment
     ReturntoWork
     RTWdecisions
-    becomePreventableDeath
+    becomeNoRecovery
     UntreatedReEnter
     EmployernotReady
     becomeLodgeClaim
@@ -135,7 +135,7 @@ to go
       ]
   ask Workers [ set size 1 ]
   createClaimAccepteds
-  countpreventabledeaths
+  countNoRecoverys
    ;; burnpatches
   if ticks = 10000 [ stop ]
   tick
@@ -180,14 +180,14 @@ to BecomeAcceptedClaim
   if LodgeClaim_Delay < random 100 and InLodgeClaim = 1 and any? LodgeClaims-here and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < New_Capacity [
       face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
      if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
-      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 set InSystem 1 ]
+      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 set InSystem 1 set Entrytime ticks ]
 end
 
 to AccessTreatment
     if Accepted_to_treatment < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InTreatment = 1 ] < Review_Capacity  [
-      face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0  ]
-    if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 set health ( health * 1.01 * Responsiveness )]
+      face one-of TreatmentCentres fd speed  set Goingtotreatment 1 Set InClaimAccepted 0  ]
+    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health ( health * 1.01 * Responsiveness )]
 
 if Emergency_to_Accepted > random 100 and InAcuteCare = 1 and any? AcuteCares-here [
       face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InAcuteCare 0 ]
@@ -231,17 +231,24 @@ to TreatmentToGeneral
 end
 
 to TestDispute
-   ifelse Success_Dispute_Lodge > random 100 and InDispute = 1 and any? Disputes-here [
-     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0  ]   [ DisputetoGeneral ]
+   ifelse Success_Dispute_Lodge > random 100 and InDispute = 1 and any? Disputes-here and InSystem = 0 [
+     face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0 set trust (trust * .99) ] [ DisputetoGeneral ]
     if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed ]
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
 end
 
 to DisputetoGeneral
-  if Dispute_to_General > random 100 and InDispute = 1 and any? Disputes-here [
+    if Success_Dispute_Lodge > random 100 and InDispute = 1 and any? Disputes-here and InSystem = 1 [
     face one-of VicPops fd speed  set GoingtoVicPops 1 set InDispute 0  ]
      if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
-    if any? VicPops in-radius 1 [ move-to one-of VicPops set InTreatment 0 set GoingtoVicPops 0 die ]
+    if any? VicPops in-radius 1 [ move-to one-of VicPops set InTreatment 0 set GoingtoVicPops 0  ]
+end
+
+to DisputeToTreatment
+  if Success_Dispute_Lodge > random 100 and InDispute = 1 and any? Disputes-here and InSystem = 1 [
+     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set InDispute 0 set trust (trust * .9) set satisfaction satisfaction * .95 ]
+    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
+    if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set health (health * responsiveness) ]
 end
 
 to ReturntoWork ;; trust is going to affec the DNA2 rate here
@@ -253,9 +260,9 @@ end
 
 to EmployernotReady ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
   if [ readiness ] of one-of Employer1s < 50 and any? Employer1s-here [
-      face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InEmployer1 0 ]
-    if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InEmployer1 0 set GoingtoreviewPatient 0 ]
+      face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 Set InEmployer1 0 ]
+    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InEmployer1 0 set GoingtoTreatment 0 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
 if Trust > random 100 and InRTW = 1 and any? RTWs-here [
@@ -276,25 +283,24 @@ to Disputesincare
  if (Dispute_Rate_LodgeClaim  + (100 - trust )) > random 1000 and InLodgeClaim = 1 and any? LodgeClaims-here [
     face one-of Disputes fd speed set GoingtoDispute 1 set InLodgeClaim 0 ]
    if GoingtoDispute = 1 [ face one-of Disputes fd speed  ]
-    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .99 set trust trust * .9 ]
+    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
 
   if (Dispute_Rate_Review + (100 - trust )) > random 100 and InTreatment = 1 and any? TreatmentCentres-here  [
      face one-of Disputes fd speed  set GoingtoDispute 1 set InTreatment 0 ]
    if GoingtoDispute = 1 [ face one-of Disputes fd speed ]
-    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .9 ]
+    if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
 end
 
-to becomePreventableDeath
-  if Death_Rate_Untreated > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
-     face one-of PreventableDeaths fd speed  set GoingtoPreventableDeath 1 set inUntreatedPopulation 0  ]
-   if GoingtoPreventableDeath = 1 [ face one-of PreventableDeaths fd speed ]
-    if any? PreventableDeaths in-radius 1 [ move-to one-of PreventableDeaths set InPreventableDeath 1 die set inUntreatedPopulation 0 ]
+to BecomeNoRecovery
+  if InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
+     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inUntreatedPopulation 0  ]
+   if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
+    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inUntreatedPopulation 0 set InNoRecovery 1 die ]
 end
 
-to countpreventabledeaths
-  set preventabledeathcount ( count Workers with [ goingtopreventabledeath = 1 ] )
+to CountNoRecoverys
+  set NoRecoverycount ( count Workers with [ goingtoNoRecovery = 1 ] )
   set DisputeCount ( count Workers with [ GoingtoDispute = 1 ] )
-
 end
 
 to UntreatedReEnter
@@ -304,9 +310,9 @@ to UntreatedReEnter
     if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set inUntreatedPopulation 0 die ]
 
 if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
-     face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 set inUntreatedPopulation 0 ]
-   if GoingtoReviewPatient = 1 [ face one-of TreatmentCentres fd speed ]
-    if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoReviewPatient 0 set inUntreatedPopulation 0 ]
+     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inUntreatedPopulation 0 ]
+   if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
+    if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set inUntreatedPopulation 0 ]
 end
 
 to NewtoLodgeClaim
@@ -382,7 +388,7 @@ to SocialEpi
 end
 
 to colourme
-  if health > Recovery_Threshold [ set color  ]
+  if health > Recovery_Threshold [ set color blue ]
 end
 
 to RemoveHealthyWorkers
@@ -777,8 +783,8 @@ CHOOSER
 93
 Injured_Workers
 Injured_Workers
-1 2 3 4 5 10 20
-6
+1 2 3 4 5 10 20 50
+4
 
 SLIDER
 59
@@ -917,7 +923,7 @@ MemorySpan
 MemorySpan
 0
 365
-180.0
+97.0
 1
 1
 NIL
@@ -1183,7 +1189,7 @@ OverBookingRate
 OverBookingRate
 0
 2
-1.57
+1.0
 .01
 1
 NIL
@@ -1321,7 +1327,7 @@ Success_Dispute_Lodge
 Success_Dispute_Lodge
 0
 100
-51.0
+100.0
 1
 1
 NIL
@@ -1336,7 +1342,7 @@ Processing_Capacity
 Processing_Capacity
 0
 100
-7.0
+20.0
 1
 1
 NIL
@@ -1351,7 +1357,7 @@ Recovery_Threshold
 Recovery_Threshold
 0
 100
-85.0
+84.0
 1
 1
 NIL
@@ -1366,7 +1372,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-75.0
+78.0
 1
 1
 NIL
@@ -1529,6 +1535,12 @@ false
 0
 Circle -7500403 true true 90 90 120
 
+exclamation
+false
+0
+Circle -7500403 true true 103 198 95
+Polygon -7500403 true true 135 180 165 180 210 30 180 0 120 0 90 30
+
 face happy
 false
 0
@@ -1606,6 +1618,23 @@ Circle -7500403 true true 96 51 108
 Circle -16777216 true false 113 68 74
 Polygon -10899396 true false 189 233 219 188 249 173 279 188 234 218
 Polygon -10899396 true false 180 255 150 210 105 210 75 240 135 240
+
+garbage can
+false
+0
+Polygon -16777216 false false 60 240 66 257 90 285 134 299 164 299 209 284 234 259 240 240
+Rectangle -7500403 true true 60 75 240 240
+Polygon -7500403 true true 60 238 66 256 90 283 135 298 165 298 210 283 235 256 240 238
+Polygon -7500403 true true 60 75 66 57 90 30 135 15 165 15 210 30 235 57 240 75
+Polygon -7500403 true true 60 75 66 93 90 120 135 135 165 135 210 120 235 93 240 75
+Polygon -16777216 false false 59 75 66 57 89 30 134 15 164 15 209 30 234 56 239 75 235 91 209 120 164 135 134 135 89 120 64 90
+Line -16777216 false 210 120 210 285
+Line -16777216 false 90 120 90 285
+Line -16777216 false 125 131 125 296
+Line -16777216 false 65 93 65 258
+Line -16777216 false 175 131 175 296
+Line -16777216 false 235 93 235 258
+Polygon -16777216 false false 112 52 112 66 127 51 162 64 170 87 185 85 192 71 180 54 155 39 127 36
 
 house
 false
