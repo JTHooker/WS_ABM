@@ -280,7 +280,7 @@ if Trust > random 100 and InRTW = 1 and any? RTWs-here [
 end
 
 to OccRehabSupport
-    if Occ_Rehab_Support_ > random 100 and InRTW = 1 and any? RTWs-here [
+    if Occ_Rehab_Support_Need > random 100 and InRTW = 1 and any? RTWs-here [
      face one-of OccRehabProviders fd speed  set GoingtoOccRehabProvider 1 Set InRTW 0 ]
      if GoingtoOccRehabProvider = 1 [ face one-of OccRehabProviders fd speed ]
     if any? OccRehabProviders in-radius 1 [ move-to one-of OccRehabProviders Set InRTW 0 set InOccRehabProvider 1 set GoingtoOccRehabProvider 0 ]
@@ -312,12 +312,12 @@ to CountNoRecoverys
 end
 
 to UntreatedReEnter
-  if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here [
+  if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here and any? OccRehabResources-here [
      face one-of VicPops fd speed  set GoingtoVicPops 1 set inOccRehabProvider 0 ]
    if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
     if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set inOccRehabProvider 0 die ]
 
-if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here [
+ife Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here and not any? OccrehabResources-here [
      face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inOccRehabProvider 0 ]
    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
     if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set inOccRehabProvider 0 ]
@@ -396,7 +396,7 @@ to SocialEpi
 end
 
 to colourme
-  if health > Recovery_Threshold [ set color blue ]
+  if satisfaction = 0  [ set color blue ]
 end
 
 to RemoveHealthyWorkers
@@ -772,10 +772,10 @@ HORIZONTAL
 SLIDER
 60
 728
-258
+260
 763
-Occ_Rehab_Support_Rate
-Occ_Rehab_Support_Rate
+Occ_Rehab_Support_Need
+Occ_Rehab_Support_Need
 0
 100
 2.0

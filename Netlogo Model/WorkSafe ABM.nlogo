@@ -299,28 +299,28 @@ to Disputesincare
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
 end
 
-to BecomeNoRecovery
-  if InOccRehabProvider = 1 and any? OccRehabProviders-here [
-     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inOccRehabProvider 0  ]
-   if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
-    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inOccRehabProvider 0 set InNoRecovery 1 die ]
-end
-
 to CountNoRecoverys
   set NoRecoverycount ( count Workers with [ goingtoNoRecovery = 1 ] )
   set DisputeCount ( count Workers with [ GoingtoDispute = 1 ] )
 end
 
 to UntreatedReEnter
-  if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here [
+  if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here and any? OccRehabResources-here [
      face one-of VicPops fd speed  set GoingtoVicPops 1 set inOccRehabProvider 0 ]
    if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
     if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set inOccRehabProvider 0 die ]
 
-if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here [
-     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inOccRehabProvider 0 ]
+ifelse Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here and not any? OccrehabResources-here [
+    face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inOccRehabProvider 0 ] [ BecomeNoRecovery ]
    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
     if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set inOccRehabProvider 0 ]
+end
+
+to BecomeNoRecovery
+  if InOccRehabProvider = 1 and any? OccRehabProviders-here [
+     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inOccRehabProvider 0  ]
+   if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
+    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inOccRehabProvider 0 set InNoRecovery 1 die ]
 end
 
 to NewtoLodgeClaim
@@ -396,7 +396,7 @@ to SocialEpi
 end
 
 to colourme
-  if health > Recovery_Threshold [ set color blue ]
+  if satisfaction = 0  [ set color blue ]
 end
 
 to RemoveHealthyWorkers
