@@ -2,7 +2,7 @@ globals [ preventabledeathcount
   naturaldeathcount]
 
 
-breed [ SAPops SAPop ]
+breed [ VicPops VicPop ]
 breed [ AcuteCares AcuteCare ]
 breed [ GPs GP ]
 breed [ ClaimAccepteds ClaimAccepted ]
@@ -39,7 +39,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   GoingtoEmployer1
   GoingtoRTW
   GoingtoLodgeClaim
-  GoingtoSAPops
+  GoingtoVicPops
   Trust
   Memory
   memory_Span
@@ -78,9 +78,9 @@ to setup
   create-Employer1s 1 [ set shape "box" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color green - 10 set readiness random-normal 50 10 ]
   create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red - 10 ]
   create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow - 10 ]
-  create-SAPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white + 10 ]
+  create-VicPops 1 [ set shape "circle 2" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white + 10 ]
   ask turtles [ create-links-with other turtles show label ]
-  create-workers Population [ set shape "person" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1 ]
+  create-workers Population [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1 ]
   ask workers [ resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ] ;;; made a change
    reset-ticks
@@ -102,12 +102,12 @@ to go
     Disputesincare
     becomenew
     becomeReview
-    becomeDNA1
+    ToEmployer
     ReturntoWork
     DNA2decisions
     becomePreventableDeath
     UntreatedReEnter
-    BecomeReviewfromDNA
+    EmployernotReady
     becomeLodgeClaim
     newtoGeneral
     newtoLodgeClaim
@@ -149,14 +149,14 @@ to initialise
 end
 
 to gpreferral ;; individuals emerging from the general population into GPs
-  if GP_referral_barrier < random 100 and state1 = 1 and any? SAPops-here  [
+  if GP_referral_barrier < random 100 and state1 = 1 and any? VicPops-here  [
     face one-of GPs fd speed set goingtoGP 1 set state1 0 ]
      if goingtoGP = 1 [ face one-of GPs fd speed ]
        if any? GPs in-radius 1 [ move-to one-of GPs set InGP 1 set goingtoGP 0 set state1 0 ]
 end
 
 to emergency ;; individuals emerging from the general population into emergency areas of hospitals
-    if Emergency_Pres < random 100 and state1 = 1 and InAcuteCare = 0 and any? SAPops-here [
+    if Emergency_Pres < random 100 and state1 = 1 and InAcuteCare = 0 and any? VicPops-here [
       face one-of AcuteCares fd speed  set GoingtoAcuteCare 1 set State1 0 ]
        if GoingtoAcuteCare = 1 [ face one-of AcuteCares fd speed ]
         if any? AcuteCares in-radius 1 [ move-to one-of AcuteCares set InAcuteCare 1 set InGP 0 set GoingtoAcuteCare 0 ]
@@ -185,7 +185,7 @@ to becomeReview
     if Accepted_to_treatment < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InTreatment = 1 ] < Review_Capacity  [
       face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InClaimAccepted 0  ]
     if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 ]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoreviewPatient 0 set health health * 1.01 ]
 
 if Emergency_to_Accepted > random 100 and InAcuteCare = 1 and any? AcuteCares-here [
       face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InAcuteCare 0 ]
@@ -207,7 +207,7 @@ to OverCapReview
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InTreatment 0 set GoingtoLodgeClaim 0  ]
 end
 
-to becomeDNA1 ;; in here is where trust is going to affect the DNA rate
+to ToEmployer ;; in here is where trust is going to affect the DNA rate
    if (health + (100 - trust)) > random 100 and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
@@ -216,9 +216,9 @@ end
 
 to ReviewtoGeneral
   if Review_General > random 100 and InTreatment = 1 and any? TreatmentCentres-here [
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set InTreatment 0  ] ;;DNA Rate is inversely proportional to trust
-     if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops Set State1 1 set InTreatment 0 set GoingtoSAPops 0 die ]
+     face one-of VicPops fd speed  set GoingtoVicPops 1 set InTreatment 0  ] ;;DNA Rate is inversely proportional to trust
+     if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
+    if any? VicPops in-radius 1 [ move-to one-of VicPops Set State1 1 set InTreatment 0 set GoingtoVicPops 0 die ]
 end
 
 to TestDispute
@@ -232,9 +232,9 @@ end
 
 to DisputetoGeneral
   if Dispute_to_General > random 100 and InDispute = 1 and any? Disputes-here [
-    face one-of SAPops fd speed  set GoingtoSAPops 1 set InDispute 0  ]
-     if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops set InTreatment 0 set GoingtoSAPops 0 die ]
+    face one-of VicPops fd speed  set GoingtoVicPops 1 set InDispute 0  ]
+     if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
+    if any? VicPops in-radius 1 [ move-to one-of VicPops set InTreatment 0 set GoingtoVicPops 0 die ]
 end
 
 to EmployerFromGP ;; trust is going affect the DNA rate here
@@ -251,17 +251,17 @@ to ReturntoWork ;; trust is going to affec the DNA2 rate here
     if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 set InEmployer1 0 set GoingtoRTW 0 ]
 end
 
-to BecomeReviewfromDNA ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
-if Trust > random 100 and InEmployer1 = 1 and any? Employer1s-here [
+to EmployernotReady ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
+  if [ readiness ] of one-of Employer1s < 50 and any? Employer1s-here [
       face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InEmployer1 0 ]
     if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InEmployer1 0 set GoingtoreviewPatient 0 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
 if Trust > random 100 and InRTW = 1 and any? RTWs-here [
-      face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 Set InRTW 0 ]
-    if GoingtoreviewPatient = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InRTW 0 set GoingtoreviewPatient 0 ]
+      face one-of VicPops fd speed  set GoingtoVicPops 1 Set InRTW 0 ]
+    if GoingtoVicPops = 1 [ face one-of VicPops fd speed  ]
+      if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
 end
 
 to DNA2Decisions
@@ -300,9 +300,9 @@ end
 
 to UntreatedReEnter
   if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set inUntreatedPopulation 0 ]
-   if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops set State1 1 set GoingtoSAPops 0 set inUntreatedPopulation 0 die ]
+     face one-of VicPops fd speed  set GoingtoVicPops 1 set inUntreatedPopulation 0 ]
+   if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
+    if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set inUntreatedPopulation 0 die ]
 
 if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
      face one-of TreatmentCentres fd speed  set GoingtoReviewPatient 1 set inUntreatedPopulation 0 ]
@@ -312,9 +312,9 @@ end
 
 to NewtoGeneral
   if New_General > random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here [ ;; Workers move from being New back into the General Population
-     face one-of SAPops fd speed  set GoingtoSAPops 1 set InClaimAccepted 0 ]
-  if GoingtoSAPops = 1 [ face one-of SAPops fd speed ]
-    if any? SAPops in-radius 1 [ move-to one-of SAPops set State1 1 set GoingtoSAPops 0 set InClaimAccepted 0 die ]
+     face one-of VicPops fd speed  set GoingtoVicPops 1 set InClaimAccepted 0 ]
+  if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
+    if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set InClaimAccepted 0 die ]
 end
 
 to NewtoLodgeClaim
@@ -373,10 +373,9 @@ to resetinitial
 end
 
 to createClaimAccepteds
- if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1
+ if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1
     resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
-    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ] ;;ifelse any? Workers with [ GoingtoSAPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoSApops = 1 ] ][ set trust random-normal 80 10 resettrust
-
+    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
   ]
 end
 
@@ -497,7 +496,7 @@ PLOT
 11
 1641
 347
-Patient States
+Worker States
 Time
 Amount
 0.0
@@ -589,9 +588,9 @@ true
 true
 "" "if remainder ticks 3000 =  0 [ clear-plot ]  \n\n;;if \"Reset patients\" = true [ clear-plot ] "
 PENS
-"DNA Pool 1 " 1.0 0 -16777216 true "" "plot count workers with [ InDNAPool1 = 1 ] "
-"DNA Pool 2 " 1.0 0 -7500403 true "" "plot count workers with [ InDNAPool2 = 1 ] "
-"Total DNA Costs" 1.0 0 -2674135 true "" "plot count workers with [ InDNAPool1 = 1 ] + count workers with [ InDNAPool2 = 1 ] "
+"DNA Pool 1 " 1.0 0 -16777216 true "" "plot count workers with [ InEmployer1 = 1 ] "
+"DNA Pool 2 " 1.0 0 -7500403 true "" "plot count workers with [ InEmployer1 = 1 ] "
+"Total DNA Costs" 1.0 0 -2674135 true "" "plot count workers with [ InEmployer1 = 1 ] + count workers with [ InDNAPool2 = 1 ] "
 
 PLOT
 1210
@@ -690,7 +689,7 @@ HORIZONTAL
 SLIDER
 67
 299
-246
+249
 332
 RTW_to_General_Population
 RTW_to_General_Population
@@ -1084,7 +1083,7 @@ BUTTON
 180
 134
 Mass-Incident
-create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of SAPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
+create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
 NIL
 1
 T
