@@ -69,24 +69,30 @@ Employer1s-own [
 
 to setup
   clear-all
-  ask patches [ set pcolor green ]
+  ask patches [ set pcolor white ]
   create-GPs 1 [ set shape "person doctor" set size 3 set label "GP" set xcor 13.92 set ycor 42.25 set color brown]
-  create-AcuteCares 1 [ set shape "ambulance" set size 5 set label "Emergency Care" set xcor 6.35 set ycor 33.52 set color white ]
+  create-AcuteCares 1 [ set shape "ambulance" set size 5 set label "Emergency Care" set xcor 6.35 set ycor 33.52 set color red ]
   create-LodgeClaims 1 [ set shape "clock" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color orange ]
   create-ClaimAccepteds 1 [ set shape "computer workstation" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
   create-NoRecoverys 1 [ set shape "Garbage Can"  set size 5 set label "No Recovery" set xcor 19.22 set ycor 5.33 set color white]
-  create-TreatmentCentres 1 [ set shape "Building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color white ]
+  create-TreatmentCentres 1 [ set shape "Building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color grey ]
   create-Disputes 1 [ set shape "Exclamation"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
-  create-Employer1s 1 [ set shape "factory" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color grey set readiness random-normal 50 10 ]
+  create-Employer1s 1 [ set shape "factory" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color  set readiness random-normal 50 10 ]
   create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red ]
   create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow ]
-  create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
+  create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color grey ]
   ask turtles [ create-links-with other turtles show label ]
-  create-workers Population [ set shape "person" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
+  create-workers Population [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color grey set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ] ;;; made a change
-   reset-ticks
+  setup-image
+  reset-ticks
 end
+
+to setup-image
+ ;; import-drawing "wslogo.jpg"
+end
+
 
 to resettrust
   if trust > 100 or trust < 1 [ set trust random-normal 80 3 ]
@@ -342,7 +348,7 @@ to rememberevents
     if any? GPs-here and memory = 1 [ set timenow ticks ]
 
   if ticks - timenow > memoryspan [ set memory 0 set trust trust ] ;; it needs to do nothing if memory = 0 here. Trust needs to go up if a good thing happens, that's all.
-      if memory = 0 [ set color white ]
+      if memory = 0 [ set color grey ]
 end
 
 to calculatetrustfactor
@@ -371,7 +377,7 @@ to resetinitial
 end
 
 to createClaimAccepteds
- if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color white set speed random-normal 1 .1
+ if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color grey set speed random-normal 1 .1
     resettrust set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10
    ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
@@ -423,10 +429,10 @@ ticks
 30.0
 
 BUTTON
-10
-10
-75
-43
+1505
+462
+1570
+495
 setup
 setup
 NIL
@@ -440,10 +446,10 @@ NIL
 1
 
 BUTTON
-10
-50
-75
-83
+1505
+502
+1570
+535
 go
 go
 T
@@ -468,7 +474,7 @@ count Workers * 10
 11
 
 SLIDER
-80
+38
 10
 185
 43
@@ -776,16 +782,6 @@ Active_Discharge_Rate
 NIL
 HORIZONTAL
 
-CHOOSER
-81
-48
-189
-93
-Injured_Workers
-Injured_Workers
-1 2 3 4 5 10 20 50
-4
-
 SLIDER
 59
 399
@@ -923,7 +919,7 @@ MemorySpan
 MemorySpan
 0
 365
-97.0
+53.0
 1
 1
 NIL
@@ -938,7 +934,7 @@ MaxTrust
 MaxTrust
 0
 100
-100.0
+90.0
 1
 1
 NIL
@@ -1378,6 +1374,21 @@ Claim_Threshold
 NIL
 HORIZONTAL
 
+SLIDER
+37
+47
+185
+80
+Injured_Workers
+Injured_Workers
+0
+100
+20.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 @#$#@#$#@
@@ -1674,6 +1685,23 @@ Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105
 Polygon -7500403 true true 105 90 60 150 75 180 135 105
 
+person business
+false
+0
+Rectangle -1 true false 120 90 180 180
+Polygon -13345367 true false 135 90 150 105 135 180 150 195 165 180 150 105 165 90
+Polygon -7500403 true true 120 90 105 90 60 195 90 210 116 154 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 183 153 210 210 240 195 195 90 180 90 150 165
+Circle -7500403 true true 110 5 80
+Rectangle -7500403 true true 127 76 172 91
+Line -16777216 false 172 90 161 94
+Line -16777216 false 128 90 139 94
+Polygon -13345367 true false 195 225 195 300 270 270 270 195
+Rectangle -13791810 true false 180 225 195 300
+Polygon -14835848 true false 180 226 195 226 270 196 255 196
+Polygon -13345367 true false 209 202 209 216 244 202 243 188
+Line -16777216 false 180 90 150 165
+Line -16777216 false 120 90 150 165
+
 person doctor
 false
 0
@@ -1692,6 +1720,88 @@ Line -16777216 false 180 15 120 15
 Line -16777216 false 150 195 165 195
 Line -16777216 false 150 240 165 240
 Line -16777216 false 150 150 165 150
+
+person farmer
+false
+0
+Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 195 90
+Polygon -1 true false 60 195 90 210 114 154 120 195 180 195 187 157 210 210 240 195 195 90 165 90 150 105 150 150 135 90 105 90
+Circle -7500403 true true 110 5 80
+Rectangle -7500403 true true 127 79 172 94
+Polygon -13345367 true false 120 90 120 180 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 180 90 172 89 165 135 135 135 127 90
+Polygon -6459832 true false 116 4 113 21 71 33 71 40 109 48 117 34 144 27 180 26 188 36 224 23 222 14 178 16 167 0
+Line -16777216 false 225 90 270 90
+Line -16777216 false 225 15 225 90
+Line -16777216 false 270 15 270 90
+Line -16777216 false 247 15 247 90
+Rectangle -6459832 true false 240 90 255 300
+
+person lumberjack
+false
+0
+Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 195 90
+Polygon -2674135 true false 60 196 90 211 114 155 120 196 180 196 187 158 210 211 240 196 195 91 165 91 150 106 150 135 135 91 105 91
+Circle -7500403 true true 110 5 80
+Rectangle -7500403 true true 127 79 172 94
+Polygon -6459832 true false 174 90 181 90 180 195 165 195
+Polygon -13345367 true false 180 195 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285
+Polygon -6459832 true false 126 90 119 90 120 195 135 195
+Rectangle -6459832 true false 45 180 255 195
+Polygon -16777216 true false 255 165 255 195 240 225 255 240 285 240 300 225 285 195 285 165
+Line -16777216 false 135 165 165 165
+Line -16777216 false 135 135 165 135
+Line -16777216 false 90 135 120 135
+Line -16777216 false 105 120 120 120
+Line -16777216 false 180 120 195 120
+Line -16777216 false 180 135 210 135
+Line -16777216 false 90 150 105 165
+Line -16777216 false 225 165 210 180
+Line -16777216 false 75 165 90 180
+Line -16777216 false 210 150 195 165
+Line -16777216 false 180 105 210 180
+Line -16777216 false 120 105 90 180
+Line -16777216 false 150 135 150 165
+Polygon -2674135 true false 100 30 104 44 189 24 185 10 173 10 166 1 138 -1 111 3 109 28
+
+person service
+false
+0
+Polygon -7500403 true true 180 195 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285
+Polygon -1 true false 120 90 105 90 60 195 90 210 120 150 120 195 180 195 180 150 210 210 240 195 195 90 180 90 165 105 150 165 135 105 120 90
+Polygon -1 true false 123 90 149 141 177 90
+Rectangle -7500403 true true 123 76 176 92
+Circle -7500403 true true 110 5 80
+Line -13345367 false 121 90 194 90
+Line -16777216 false 148 143 150 196
+Rectangle -16777216 true false 116 186 182 198
+Circle -1 true false 152 143 9
+Circle -1 true false 152 166 9
+Rectangle -16777216 true false 179 164 183 186
+Polygon -2674135 true false 180 90 195 90 183 160 180 195 150 195 150 135 180 90
+Polygon -2674135 true false 120 90 105 90 114 161 120 195 150 195 150 135 120 90
+Polygon -2674135 true false 155 91 128 77 128 101
+Rectangle -16777216 true false 118 129 141 140
+Polygon -2674135 true false 145 91 172 77 172 101
+
+person soldier
+false
+0
+Rectangle -7500403 true true 127 79 172 94
+Polygon -10899396 true false 105 90 60 195 90 210 135 105
+Polygon -10899396 true false 195 90 240 195 210 210 165 105
+Circle -7500403 true true 110 5 80
+Polygon -10899396 true false 105 90 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285 180 195 195 90
+Polygon -6459832 true false 120 90 105 90 180 195 180 165
+Line -6459832 false 109 105 139 105
+Line -6459832 false 122 125 151 117
+Line -6459832 false 137 143 159 134
+Line -6459832 false 158 179 181 158
+Line -6459832 false 146 160 169 146
+Rectangle -6459832 true false 120 193 180 201
+Polygon -6459832 true false 122 4 107 16 102 39 105 53 148 34 192 27 189 17 172 2 145 0
+Polygon -16777216 true false 183 90 240 15 247 22 193 90
+Rectangle -6459832 true false 114 187 128 208
+Rectangle -6459832 true false 177 187 191 208
 
 plant
 false
