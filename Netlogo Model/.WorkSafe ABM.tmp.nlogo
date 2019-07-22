@@ -11,9 +11,10 @@ breed [ TreatmentCentres TreatmentCentre ]
 breed [ Disputes Death ]
 breed [ Employer1s Employer1 ]
 breed [ RTWs RTW ]
-breed [ UntreatedPopulations UntreatedPopulation ]
+breed [ OccRehabProviders OccRehabProvider ]
 breed [ LodgeClaims LodgeClaim ]
 breed [ Workers Worker ]
+breed [ OccRehabResources OccRehabResource ]
 
 Workers-own ; states and qualities that individual Workers have or are in at any stage
 [
@@ -24,7 +25,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   InClaimAccepted
   InTreatment
   InDispute
-  InUntreatedPopulation
+  InOccRehabProvider
   InEmployer1
   InRTW
   InLodgeClaim
@@ -35,7 +36,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   GoingtoClaimAccepted
   GoingtoTreatment
   GoingtoDispute
-  GoingtoUntreatedPopulation
+  GoingtoOccRehabProvider
   GoingtoEmployer1
   GoingtoRTW
   GoingtoLodgeClaim
@@ -69,20 +70,21 @@ Employer1s-own [
 
 to setup
   clear-all
-  ask patches [ set pcolor white ]
-  create-GPs 1 [ set shape "person doctor" set size 3 set label "GP" set xcor 13.92 set ycor 42.25 set color brown]
+  ask patches [ set pcolor green ]
+  create-GPs 1 [ set shape "person doctor" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color brown]
   create-AcuteCares 1 [ set shape "ambulance" set size 5 set label "Emergency Care" set xcor 6.35 set ycor 33.52 set color red ]
   create-LodgeClaims 1 [ set shape "clock" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color orange ]
-  create-ClaimAccepteds 1 [ set shape "computer workstation" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color yellow ]
+  create-ClaimAccepteds 1 [ set shape "computer workstation" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color white ]
   create-NoRecoverys 1 [ set shape "Garbage Can"  set size 5 set label "No Recovery" set xcor 19.22 set ycor 5.33 set color white]
   create-TreatmentCentres 1 [ set shape "Building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color grey ]
   create-Disputes 1 [ set shape "Exclamation"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
-  create-Employer1s 1 [ set shape "factory" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color  set readiness random-normal 50 10 ]
+  create-Employer1s 1 [ set shape "person business" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color white set readiness random-normal 50 10 ]
   create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red ]
-  create-UntreatedPopulations 1 [ set shape "box" set size 5 set label "Untreated Population" set xcor 36.08 set ycor 42.25 set color yellow ]
-  create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color grey ]
+  create-OccRehabProviders 1 [ set shape "box" set size 5 set label "Occ Rehab Provider" set xcor 36.08 set ycor 42.25 set color yellow ]
+  create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
+  create-OccRehabResources 1 [ set shape "dot" set color blue move-to one-of OccRehabProviders ]
   ask turtles [ create-links-with other turtles show label ]
-  create-workers Population [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color grey set trust random-normal 80 3 set speed random-normal 1 .1 ]
+  create-workers Population [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ] ;;; made a change
   setup-image
@@ -112,8 +114,8 @@ to go
     AccessTreatment
     ToEmployerfromTreatment
     ReturntoWork
-    RTWdecisions
-    becomeNoRecovery
+    OccRehabSupport
+    WorkWithOccRehab
     UntreatedReEnter
     EmployernotReady
     becomeLodgeClaim
@@ -277,11 +279,11 @@ if Trust > random 100 and InRTW = 1 and any? RTWs-here [
       if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
 end
 
-to RTWDecisions
-    if Active_Discharge_Rate > random 100 and InRTW = 1 and any? RTWs-here [
-     face one-of UntreatedPopulations fd speed  set GoingtoUntreatedPopulation 1 Set InRTW 0 ]
-     if GoingtoUntreatedPopulation = 1 [ face one-of UntreatedPopulations fd speed ]
-    if any? UntreatedPopulations in-radius 1 [ move-to one-of UntreatedPopulations Set InRTW 0 set InUntreatedPopulation 1 set GoingtoUntreatedPopulation 0 ]
+to OccRehabSupport
+    if _Rate > random 100 and InRTW = 1 and any? RTWs-here [
+     face one-of OccRehabProviders fd speed  set GoingtoOccRehabProvider 1 Set InRTW 0 ]
+     if GoingtoOccRehabProvider = 1 [ face one-of OccRehabProviders fd speed ]
+    if any? OccRehabProviders in-radius 1 [ move-to one-of OccRehabProviders Set InRTW 0 set InOccRehabProvider 1 set GoingtoOccRehabProvider 0 ]
 end
 
 to Disputesincare
@@ -297,12 +299,17 @@ to Disputesincare
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
 end
 
-to BecomeNoRecovery
-  if InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
-     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inUntreatedPopulation 0  ]
+to WorkWithOccRehab
+  if InOccRehabProvider = 1 and any? OccRehabProviders-here [
+     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inOccRehabProvider 0  ]
    if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
-    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inUntreatedPopulation 0 set InNoRecovery 1 die ]
+    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inOccRehabProvider 0 set InNoRecovery 1 die ]
 end
+
+
+
+
+
 
 to CountNoRecoverys
   set NoRecoverycount ( count Workers with [ goingtoNoRecovery = 1 ] )
@@ -310,15 +317,15 @@ to CountNoRecoverys
 end
 
 to UntreatedReEnter
-  if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
-     face one-of VicPops fd speed  set GoingtoVicPops 1 set inUntreatedPopulation 0 ]
+  if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here [
+     face one-of VicPops fd speed  set GoingtoVicPops 1 set inOccRehabProvider 0 ]
    if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
-    if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set inUntreatedPopulation 0 die ]
+    if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set inOccRehabProvider 0 die ]
 
-if Return_to_General > random 100 and InUntreatedPopulation = 1 and any? UntreatedPopulations-here [
-     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inUntreatedPopulation 0 ]
+if Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here [
+     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inOccRehabProvider 0 ]
    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
-    if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set inUntreatedPopulation 0 ]
+    if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set inOccRehabProvider 0 ]
 end
 
 to NewtoLodgeClaim
@@ -348,7 +355,7 @@ to rememberevents
     if any? GPs-here and memory = 1 [ set timenow ticks ]
 
   if ticks - timenow > memoryspan [ set memory 0 set trust trust ] ;; it needs to do nothing if memory = 0 here. Trust needs to go up if a good thing happens, that's all.
-      if memory = 0 [ set color grey ]
+      if memory = 0 [ set color white ]
 end
 
 to calculatetrustfactor
@@ -377,7 +384,7 @@ to resetinitial
 end
 
 to createClaimAccepteds
- if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color grey set speed random-normal 1 .1
+ if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color white set speed random-normal 1 .1
     resettrust set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10
    ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
@@ -404,11 +411,11 @@ end
 GRAPHICS-WINDOW
 315
 10
-866
-562
+834
+530
 -1
 -1
-10.65
+6.961
 1
 10
 1
@@ -1001,10 +1008,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-210
-99
-290
-133
+1503
+542
+1583
+576
 Go Once
 Go
 NIL
@@ -1338,7 +1345,7 @@ Processing_Capacity
 Processing_Capacity
 0
 100
-20.0
+100.0
 1
 1
 NIL
