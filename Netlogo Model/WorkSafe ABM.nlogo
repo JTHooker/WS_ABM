@@ -8,7 +8,7 @@ breed [ GPs GP ]
 breed [ ClaimAccepteds ClaimAccepted ]
 breed [ NoRecoverys NoRecovery ]
 breed [ TreatmentCentres TreatmentCentre ]
-breed [ Disputes Death ]
+breed [ Disputes Dispute ]
 breed [ Employer1s Employer1 ]
 breed [ RTWs RTW ]
 breed [ OccRehabProviders OccRehabProvider ]
@@ -110,7 +110,7 @@ to isClaimType
 end
 
 to setup-image
- ;; import-drawing "wslogo.jpg"
+  import-drawing "wslogo.jpg"
 end
 
 
@@ -256,7 +256,7 @@ to TreatmentToGeneral
 end
 
 to ToEmployerfromTreatment ;; in here is where trust is going to affect the DNA rate
-   if (health + (100 - trust)) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if (health + (95 - trust )) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
@@ -446,11 +446,11 @@ end
 GRAPHICS-WINDOW
 1336
 16
-1875
-556
+2126
+808
 -1
 -1
-7.24
+10.7
 1
 10
 1
@@ -558,7 +558,7 @@ true
 "" "if ticks = 100 [ clear-plot ] \n\nif \"Reset Patients\" = true [ clear-plot ] "
 PENS
 "New Claimants" 1.0 0 -11085214 true "" "plot count workers with [ inClaimAccepted = 1 ] "
-"TreatedPatients" 1.0 0 -14454117 true "" "plot count workers with [ inTreatment = 1 ] "
+"Treated Patients" 1.0 0 -14454117 true "" "plot count workers with [ inTreatment = 1 ] "
 "With GP" 1.0 0 -2674135 true "" "plot count workers with [ InGP = 1 ] "
 "Waiting to Lodge" 1.0 0 -16777216 true "" "plot count workers with [ inLodgeClaim = 1 ] "
 "Trust of Accepted" 1.0 0 -7500403 true "" "plot mean [ trust ] of workers with [ inSystem = 1 ] "
@@ -699,21 +699,6 @@ Accepted_to_Treatment
 1
 100
 25.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-55
-203
-235
-236
-DNA1_to_Review_Rate
-DNA1_to_Review_Rate
-0
-100
-86.0
 1
 1
 NIL
@@ -1008,7 +993,7 @@ INPUTBOX
 591
 714
 Review_Capacity
-500.0
+50.0
 1
 0
 Number
@@ -1019,7 +1004,7 @@ INPUTBOX
 683
 714
 New_Capacity
-1000.0
+100.0
 1
 0
 Number
@@ -1164,7 +1149,7 @@ ManageExpectations
 ManageExpectations
 0
 50
-20.0
+25.0
 1
 1
 NIL
@@ -1276,7 +1261,7 @@ Recovery_Threshold
 Recovery_Threshold
 0
 100
-55.0
+85.0
 1
 1
 NIL
@@ -1291,7 +1276,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-50.0
+60.0
 1
 1
 NIL
@@ -1306,7 +1291,7 @@ Injured_Workers
 Injured_Workers
 0
 100
-15.0
+20.0
 1
 1
 NIL
@@ -1331,25 +1316,25 @@ PENS
 "default" 1.0 0 -16777216 true "" "histogram [ salary ] of workers"
 
 SLIDER
-1663
-488
-1796
-523
+1399
+720
+1532
+755
 Accept_Threshold
 Accept_Threshold
 0
 2
-0.3
+0.2
 .1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-1540
-578
-1686
-611
+1666
+813
+1812
+846
 System Performance
 ask patches [ set pcolor black ] 
 NIL
