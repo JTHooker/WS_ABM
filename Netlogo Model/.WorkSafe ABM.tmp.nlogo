@@ -16,11 +16,11 @@ breed [ LodgeClaims LodgeClaim ]
 breed [ Workers Worker ]
 breed [ OccRehabResources OccRehabResource ]
 
-Workers-own ; states and qualities that individual Workers have or are in at any stage
+Workers-own ; Attributes that individual Workers have or are in at any stage
 [
-  motivation
+  State1
   InGP
-  InAcuteCare
+  InEmergency
   InNoRecovery
   InClaimAccepted
   InTreatment
@@ -29,7 +29,7 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   InEmployer1
   InRTW
   InLodgeClaim
-  State1
+
   GoingtoGP
   GoingtoAcuteCare
   GoingtoNoRecovery
@@ -41,12 +41,14 @@ Workers-own ; states and qualities that individual Workers have or are in at any
   GoingtoRTW
   GoingtoLodgeClaim
   GoingtoVicPops
-  InSystem
-  Trust
-  Memory
-  memory_Span
-  Health
-  Satisfaction
+
+  InSystem ;; They have had their claim accepted
+  Trust ;; Trust in the system that increases if they have a good experience and decreases if their expectations aren't met
+  Memory ;; A boolean memory variable related to their recollection of past treatment or service events
+  Memory_Span ;; They forget abut their previous experiences after a certain time-span
+  Health ;; They have an incoming health variable related to their injury / 100
+  MentalHealthClaim ;; A boolean flag determining if their injury is a mental health claim
+  Satisfaction ;;
   Entrytime
   Timenow
   Timenow1
@@ -86,9 +88,13 @@ to setup
   ask turtles [ create-links-with other turtles show label ]
   create-workers Population [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
-    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ] ;;; made a change
+    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ismentalhealth ] ;;; made a change
   setup-image
   reset-ticks
+end
+
+to ismentalhealth
+  if mental_health_freq < 100 [ set mentalhealthclaim 1 ]
 end
 
 to setup-image
@@ -166,17 +172,17 @@ to gpreferral ;; individuals emerging from the general population into GPs
 end
 
 to Emergency ;; individuals emerging from the general population into emergency areas of hospitals
-    if Emergency_Pres < random 100 and state1 = 1 and InAcuteCare = 0 and any? VicPops-here [
+    if Emergency_Pres < random 100 and state1 = 1 and InEmergency = 0 and any? VicPops-here [
       face one-of AcuteCares fd speed  set GoingtoAcuteCare 1 set State1 0 ]
        if GoingtoAcuteCare = 1 [ face one-of AcuteCares fd speed ]
-        if any? AcuteCares in-radius 1 [ move-to one-of AcuteCares set InAcuteCare 1 set InGP 0 set GoingtoAcuteCare 0 ]
+        if any? AcuteCares in-radius 1 [ move-to one-of AcuteCares set InEmergency 1 set InGP 0 set GoingtoAcuteCare 0 ]
 end
 
 to BecomeLodgeClaim ;;
-     if Acute_Care_Barrier < random 100 and InAcuteCare = 1 and any? AcuteCares-here and health < Claim_Threshold [
-    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InAcuteCare 0 ]
+     if Acute_Care_Barrier < random 100 and InEmergency = 1 and any? AcuteCares-here and health < Claim_Threshold [
+    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InEmergency 0 ]
    if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
-        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InAcuteCare 0 set GoingtoLodgeClaim 0  ]
+        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InEmergency 0 set GoingtoLodgeClaim 0  ]
 
     if GP_Referral_Barrier < random 100 and InGP = 1 and any? GPs-here and health < Claim_Threshold [
       face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InGP 0 ]
@@ -197,8 +203,8 @@ to AccessTreatment
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health ( health * 1.01 * Responsiveness )]
 
-if Emergency_to_Accepted > random 100 and InAcuteCare = 1 and any? AcuteCares-here [
-      face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InAcuteCare 0 ]
+if Emergency_to_Accepted > random 100 and InEmergency = 1 and any? AcuteCares-here [
+      face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InEmergency 0 ]
     if GoingtoClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed  ]
       if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 set GoingtoCLaimAccepted 0 ]
 end
@@ -299,13 +305,6 @@ to Disputesincare
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
 end
 
-to BecomeNoRecovery
-  if InOccRehabProvider = 1 and any? OccRehabProviders-here [
-     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inOccRehabProvider 0  ]
-   if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
-    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inOccRehabProvider 0 set InNoRecovery 1 die ]
-end
-
 to CountNoRecoverys
   set NoRecoverycount ( count Workers with [ goingtoNoRecovery = 1 ] )
   set DisputeCount ( count Workers with [ GoingtoDispute = 1 ] )
@@ -317,10 +316,17 @@ to UntreatedReEnter
    if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
     if any? VicPops in-radius 1 [ move-to one-of VicPops set State1 1 set GoingtoVicPops 0 set inOccRehabProvider 0 die ]
 
-ife Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here and not any? OccrehabResources-here [
-     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inOccRehabProvider 0 ]
+ifelse Return_to_General > random 100 and InOccRehabProvider = 1 and any? OccRehabProviders-here and not any? OccrehabResources-here [
+    face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inOccRehabProvider 0 ] [ BecomeNoRecovery ]
    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
     if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set inOccRehabProvider 0 ]
+end
+
+to BecomeNoRecovery
+  if InOccRehabProvider = 1 and any? OccRehabProviders-here and not any? OccRehabResources-here [
+     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inOccRehabProvider 0  ]
+   if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
+    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inOccRehabProvider 0 set InNoRecovery 1 die ]
 end
 
 to NewtoLodgeClaim
@@ -381,7 +387,7 @@ end
 to createClaimAccepteds
  if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color white set speed random-normal 1 .1
     resettrust set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
-    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10
+    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 Ismentalhealth
    ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
   ]
 end
@@ -772,7 +778,7 @@ HORIZONTAL
 SLIDER
 60
 728
-260
+247
 763
 Occ_Rehab_Support_Need
 Occ_Rehab_Support_Need
@@ -1355,7 +1361,7 @@ Recovery_Threshold
 Recovery_Threshold
 0
 100
-84.0
+99.0
 1
 1
 NIL
@@ -1370,7 +1376,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-78.0
+85.0
 1
 1
 NIL
@@ -1386,6 +1392,21 @@ Injured_Workers
 0
 100
 20.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+1668
+22
+1841
+57
+Mental_health_freq
+Mental_health_freq
+0
+100
+5.0
 1
 1
 NIL
