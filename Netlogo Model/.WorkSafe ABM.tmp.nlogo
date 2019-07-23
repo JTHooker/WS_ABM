@@ -48,21 +48,21 @@ Workers-own ; Attributes that individual Workers have or are in at any stage
   Memory_Span ;; They forget abut their previous experiences after a certain time-span
   Health ;; They have an incoming health variable related to their injury / 100
   MentalHealthClaim ;; A boolean flag determining if their injury is a mental health claim
-  Satisfaction ;;
-  Entrytime
-  Timenow
-  Timenow1
-  saliencyexpectation
-  saliencyexperience
-  initialassociationstrength
-  newv
-  newassociationstrength
-  vmax
-  vmin
-  speed
-  LodgeClaimExpectations
-  engaged
-  Responsiveness
+  Satisfaction ;; Overall satisfaction score / 100 rises with treatment and access, decreases with disputes - need to link it to health
+  Entrytime ;; The tick that the worker's claim is accepted by the injury rehabilitation system
+  Timenow ;; Ticks on initial referral to WorkSafe Claim
+  Timenow1 ;; Tiicks related to ultimate assessment of eligibility
+  saliencyexpectation ;; How connected the expectation of service is to the experience
+  saliencyexperience ;; How connected the experience is to the expectation
+  initialassociationstrength ;; The association (essentially learning rate ) between the worker's experience of the system and how they react to it.
+  newv ;; used in calculatio nof the above
+  newassociationstrength ;; as above
+  vmax ;; maximum association
+  vmin ;; minimum association
+  speed ;; speed of the agent through the network across the plane
+  LodgeClaimExpectations ;; expectations of how long it will take for their claim to be accepted
+  engaged ;; Flag for if the worker remembers events
+  Responsiveness ;; How responsive the worker is to treatment provided
 ]
 
 Employer1s-own [
@@ -94,7 +94,7 @@ to setup
 end
 
 to ismentalhealth
-  if mental_health_freq < 100 [ set mentalhealthclaim 1 ]
+  if mental_health_freq > 100 [ set mentalhealthclaim 1 ]
 end
 
 to setup-image
@@ -649,7 +649,7 @@ LodgeClaim_Delay
 LodgeClaim_Delay
 0
 100
-10.0
+21.0
 1
 1
 NIL

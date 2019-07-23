@@ -48,10 +48,10 @@ Workers-own ; Attributes that individual Workers have or are in at any stage
   Memory_Span ;; They forget abut their previous experiences after a certain time-span
   Health ;; They have an incoming health variable related to their injury / 100
   MentalHealthClaim ;; A boolean flag determining if their injury is a mental health claim
-  Satisfaction ;;
-  Entrytime
-  Timenow
-  Timenow1
+  Satisfaction ;; Overall satisfaction score / 100 rises with treatment and access, decreases with disputes - need to link it to health
+  Entrytime ;; The tick that the worker's claim is accepted by the injury rehabilitation system
+  Timenow ;;
+  Timenow1 ;;
   saliencyexpectation
   saliencyexperience
   initialassociationstrength
