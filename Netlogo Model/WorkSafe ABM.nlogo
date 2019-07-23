@@ -50,23 +50,29 @@ Workers-own ; Attributes that individual Workers have or are in at any stage
   MentalHealthClaim ;; A boolean flag determining if their injury is a mental health claim
   Satisfaction ;; Overall satisfaction score / 100 rises with treatment and access, decreases with disputes - need to link it to health
   Entrytime ;; The tick that the worker's claim is accepted by the injury rehabilitation system
-  Timenow ;;
-  Timenow1 ;;
-  saliencyexpectation
-  saliencyexperience
-  initialassociationstrength
-  newv
-  newassociationstrength
-  vmax
-  vmin
-  speed
-  LodgeClaimExpectations
-  engaged
-  Responsiveness
+  Timenow ;; Ticks on initial referral to WorkSafe Claim
+  Timenow1 ;; Tiicks related to ultimate assessment of eligibility
+  saliencyexpectation ;; How connected the expectation of service is to the experience
+  saliencyexperience ;; How connected the experience is to the expectation
+  initialassociationstrength ;; The association (essentially learning rate ) between the worker's experience of the system and how they react to it.
+  newv ;; used in calculatio nof the above
+  newassociationstrength ;; as above
+  vmax ;; maximum association
+  vmin ;; minimum association
+  speed ;; speed of the agent through the network across the plane
+  LodgeClaimExpectations ;; expectations of how long it will take for their claim to be accepted
+  engaged ;; Flag for if the worker remembers events
+  Responsiveness ;; How responsive the worker is to treatment provided
+  CostsTreatment ;; Costs of treatment received
+  CostsWageReplacement ;; Costs of Wage Replacement
+  Salary ;; Salary of the individual
+
+  ;; need to add costs
+
 ]
 
 Employer1s-own [
-  readiness
+  readiness ;; How ready the employer is to take the worker back with adjusted duties
 ]
 
 
@@ -88,7 +94,8 @@ to setup
   ask turtles [ create-links-with other turtles show label ]
   create-workers Population [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
-    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 ismentalhealth ] ;;; made a change
+    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations
+    set health random-normal 50 10 ismentalhealth set salary random-normal 55 20 ]
   setup-image
   reset-ticks
 end
@@ -108,6 +115,7 @@ to resettrust
   if saliencyExperience > 1 or saliencyExperience <= 0 [ set saliencyExpectation random-normal ExpectationSaliency 10 ]
   if health > 100 or health < 1 [ set health random-normal 50 10 ]
   if satisfaction > 100 or satisfaction < 10 [ set satisfaction trust ]
+  if salary < 25 [ set salary random-normal 55 20 ]
 end
 
 to go
@@ -386,8 +394,9 @@ end
 
 to createClaimAccepteds
  if count Workers < MaxWorkers [ create-Workers Injured_Workers [ set shape "person" set state1 0 move-to one-of VicPops set color white set speed random-normal 1 .1
-    resettrust set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
+    set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 Ismentalhealth
+    set salary random-normal 55 20 resettrust
    ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
   ]
 end
@@ -649,7 +658,7 @@ LodgeClaim_Delay
 LodgeClaim_Delay
 0
 100
-10.0
+0.0
 1
 1
 NIL
@@ -1249,7 +1258,7 @@ ManageExpectations
 ManageExpectations
 0
 50
-6.0
+50.0
 1
 1
 NIL
@@ -1264,7 +1273,7 @@ Error_of_Estimate
 Error_of_Estimate
 0
 50
-10.0
+0.0
 1
 1
 NIL
@@ -1346,7 +1355,7 @@ Processing_Capacity
 Processing_Capacity
 0
 100
-100.0
+38.0
 1
 1
 NIL
@@ -1391,7 +1400,7 @@ Injured_Workers
 Injured_Workers
 0
 100
-20.0
+69.0
 1
 1
 NIL
@@ -1411,6 +1420,24 @@ Mental_health_freq
 1
 NIL
 HORIZONTAL
+
+PLOT
+1665
+80
+1865
+230
+Salary
+NIL
+NIL
+0.0
+200.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "histogram [ salary ] of workers"
 
 @#$#@#$#@
 ## WHAT IS IT?
