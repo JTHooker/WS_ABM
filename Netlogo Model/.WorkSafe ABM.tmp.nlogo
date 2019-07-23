@@ -444,10 +444,10 @@ to CountWageReplacementCosts
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-315
-10
-854
-550
+1455
+18
+1994
+558
 -1
 -1
 7.24
@@ -471,10 +471,10 @@ ticks
 30.0
 
 BUTTON
-1505
-462
-1570
-495
+942
+466
+1007
+499
 setup
 setup
 NIL
@@ -488,10 +488,10 @@ NIL
 1
 
 BUTTON
-1505
-502
-1570
-535
+942
+506
+1007
+539
 go
 go
 T
@@ -505,10 +505,10 @@ NIL
 0
 
 MONITOR
-1208
-352
-1315
-397
+645
+356
+752
+401
 Total Workers
 count Workers * 10
 0
@@ -531,10 +531,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1208
-401
-1274
-446
+645
+405
+711
+450
 With GP
 count Workers with [ inGP = 1 ] * 10
 0
@@ -542,10 +542,10 @@ count Workers with [ inGP = 1 ] * 10
 11
 
 PLOT
-878
-11
-1641
-347
+315
+15
+955
+353
 Worker States
 Time
 Amount
@@ -567,10 +567,10 @@ PENS
 "Trust In Review" 1.0 0 -13345367 true "" "plot mean [ trust ] of workers with [ inTreatment = 1 ] "
 
 MONITOR
-1338
-401
-1429
-446
+775
+405
+866
+450
 New Patients
 count workers with [InClaimAccepted = 1] * 10
 0
@@ -578,10 +578,10 @@ count workers with [InClaimAccepted = 1] * 10
 11
 
 MONITOR
-1319
-352
-1429
-397
+756
+356
+866
+401
 Review Workers
 count workers with [InTreatment = 1 ] * 10
 0
@@ -623,10 +623,10 @@ NIL
 1
 
 PLOT
-878
-352
-1203
-472
+315
+356
+640
+476
 Costs
 NIL
 NIL
@@ -642,10 +642,10 @@ PENS
 "Wage Replacement Costs" 1.0 0 -7500403 true "" "plot sum [ CostsWageReplacement ] of workers with [ Insystem = 1 ] "
 
 PLOT
-880
-477
-1203
-597
+316
+481
+639
+601
 Unresolved Disputes
 NIL
 NIL
@@ -795,10 +795,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1278
-401
-1335
-446
+715
+405
+772
+450
 Lodged
 count workers with [ inLodgeClaim = 1 ] * 10
 0
@@ -956,10 +956,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-1503
-542
-1583
-576
+941
+546
+1021
+580
 Go Once
 Go
 NIL
@@ -1025,10 +1025,10 @@ New_Capacity
 Number
 
 MONITOR
-908
-63
-966
-108
+345
+38
+403
+83
 Trust
 Mean [ trust ] of workers with [ InSystem = 1 ]
 1
@@ -1078,7 +1078,7 @@ MaxWorkers
 MaxWorkers
 0
 2000
-2000.0
+1000.0
 50
 1
 NIL
@@ -1125,10 +1125,10 @@ No Barrier to High Barrier
 1
 
 MONITOR
-1439
-354
-1589
-399
+876
+358
+1026
+403
 Trust of Accepted Claims
 mean [ trust ] of workers with [ InSystem = 1 ]
 1
@@ -1136,10 +1136,10 @@ mean [ trust ] of workers with [ InSystem = 1 ]
 11
 
 PLOT
-1064
-612
-1277
-762
+966
+173
+1179
+323
 Trust histogram
 NIL
 NIL
@@ -1186,10 +1186,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1212
-475
-1429
-599
+649
+479
+866
+603
 Association
 NIL
 NIL
@@ -1204,10 +1204,10 @@ PENS
 "Association" 1.0 0 -16777216 true "" " plot mean [ newassociationstrength * 10 ] of workers "
 
 PLOT
-1286
-612
-1650
-762
+961
+16
+1325
+166
 Overall Trust
 NIL
 NIL
@@ -1313,10 +1313,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1656
-612
-1856
-762
+1033
+358
+1233
+508
 Salary
 NIL
 NIL
@@ -1331,25 +1331,25 @@ PENS
 "default" 1.0 0 -16777216 true "" "histogram [ salary ] of workers"
 
 SLIDER
-330
-482
-463
-517
+1663
+488
+1796
+523
 Accept_Threshold
 Accept_Threshold
 0
 2
-0.2
+0.3
 .1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-520
-571
-666
-604
+1659
+579
+1805
+612
 System Performance
 ask patches [ set pcolor black ] 
 NIL
@@ -1363,10 +1363,10 @@ NIL
 1
 
 BUTTON
-1442
-405
-1591
-445
+878
+408
+1027
+448
 Mass-Incident
 create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
 NIL
