@@ -226,7 +226,7 @@ to AccessTreatment
     if Accepted_to_treatment < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InTreatment = 1 ] < Review_Capacity  [
       face one-of TreatmentCentres fd speed  set Goingtotreatment 1 Set InClaimAccepted 0  ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health ( health * 1.01 * Responsiveness )]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health ( health + (1 * Responsiveness ))]
 
 if Emergency_to_Accepted > random 100 and InEmergency = 1 and any? AcuteCares-here [
       face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InEmergency 0 ]
@@ -243,13 +243,20 @@ end
 
 to OverCapReview
     if InTreatment = 1 and count Workers with [ InTreatment = 1 ] > Review_Capacity [
-    face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InTreatment 0 ]
-    if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
-        if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InTreatment 0 set GoingtoLodgeClaim 0  ]
+    face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 set InTreatment 0 ]
+    if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
+        if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 set InTreatment 0 set goingtoClaimAccepted 0 ]
+end
+
+to TreatmentToGeneral
+   if (health + (100 - trust)) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+     face one-of VicPops fd speed set GoingtoVicPops 1 set InTreatment 0 ]
+     if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
+    if any? VicPops in-radius 1 [ move-to one-of VicPops die ]
 end
 
 to ToEmployerfromTreatment ;; in here is where trust is going to affect the DNA rate
-   if (health + (100 - trust)) > random 100 and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely to DNA at any stage if their levels of trust are lower
+   if (health + (100 - trust)) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
@@ -260,13 +267,6 @@ to EmployerFromGP ;; trust is going affect the DNA rate here
      face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
-end
-
-to TreatmentToGeneral
-  if Review_General > random 100 and InTreatment = 1 and any? TreatmentCentres-here [
-     face one-of VicPops fd speed  set GoingtoVicPops 1 set InTreatment 0  ] ;;DNA Rate is inversely proportional to trust
-     if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
-    if any? VicPops in-radius 1 [ move-to one-of VicPops die ]
 end
 
 to TestDispute
@@ -324,7 +324,7 @@ to Disputesincare
    if GoingtoDispute = 1 [ face one-of Disputes fd speed  ]
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
 
-  if (Dispute_Rate_Review + (100 - trust )) > random 100 and InTreatment = 1 and any? TreatmentCentres-here  [
+  if (Dispute_Rate_Review + (100 - trust )) > random 1000 and InTreatment = 1 and any? TreatmentCentres-here  [
      face one-of Disputes fd speed  set GoingtoDispute 1 set InTreatment 0 ]
    if GoingtoDispute = 1 [ face one-of Disputes fd speed ]
     if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .99 set trust trust * .5 ]
@@ -516,10 +516,10 @@ count Workers * 10
 11
 
 SLIDER
-38
-10
-185
-43
+19
+20
+166
+53
 Population
 Population
 0
@@ -589,10 +589,10 @@ count workers with [InTreatment = 1 ] * 10
 11
 
 BUTTON
-196
-12
-308
-45
+178
+23
+290
+56
 Reset Patients
 ask workers [ die ] \nask turtles [ set size 5 ] 
 NIL
@@ -606,10 +606,10 @@ NIL
 1
 
 BUTTON
-197
-48
-308
-81
+178
+59
+289
+92
 Trace Paths
 ask workers [ pen-down ] 
 T
@@ -639,6 +639,7 @@ true
 "" "if remainder ticks 3000 =  0 [ clear-plot ]  \n\n;;if \"Reset patients\" = true [ clear-plot ] "
 PENS
 "Treatment Costs" 1.0 0 -5298144 true "" "plot sum [ CostsTreatment ] of workers with [ InSystem = 1 ] "
+"Wage Replacement Costs" 1.0 0 -7500403 true "" "plot sum [ CostsWageReplacement ] of workers with [ Insystem = 1 ] "
 
 PLOT
 880
@@ -659,10 +660,10 @@ PENS
 "Disputes" 1.0 0 -2674135 true "" "plot DisputeCount"
 
 SLIDER
-20
-155
-146
-188
+19
+126
+145
+159
 GP_Referral_Barrier
 GP_Referral_Barrier
 0
@@ -674,10 +675,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-150
-156
-282
-189
+149
+126
+281
+159
 Acute_Care_Barrier
 Acute_Care_Barrier
 0
@@ -689,10 +690,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-61
-465
-236
-498
+56
+412
+231
+445
 Accepted_to_Treatment
 Accepted_to_Treatment
 1
@@ -704,10 +705,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-59
-256
-239
-289
+55
+203
+235
+236
 DNA1_to_Review_Rate
 DNA1_to_Review_Rate
 0
@@ -719,10 +720,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-59
-291
-241
-324
+55
+238
+237
+271
 RTW_to_General_Population
 RTW_to_General_Population
 0
@@ -734,10 +735,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-59
-326
-238
-359
+55
+273
+234
+306
 Death_Rate_Untreated
 Death_Rate_Untreated
 0
@@ -749,45 +750,45 @@ NIL
 HORIZONTAL
 
 SLIDER
-60
-360
-238
-393
+55
+306
+233
+339
 Dispute_Rate_LodgeClaim
 Dispute_Rate_LodgeClaim
 0
 100
-50.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-60
-728
-238
-764
+55
+642
+233
+678
 Occ_Rehab_Support_Need
 Occ_Rehab_Support_Need
 0
 100
-2.0
+3.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-59
-399
-237
-432
+55
+346
+233
+379
 Dispute_Rate_Review
 Dispute_Rate_Review
 0
 100
-51.0
+0.0
 1
 1
 NIL
@@ -805,10 +806,10 @@ count workers with [ inLodgeClaim = 1 ] * 10
 11
 
 SLIDER
-61
-433
-237
-466
+56
+380
+232
+413
 Return_to_General
 Return_to_General
 0
@@ -819,21 +820,11 @@ Return_to_General
 NIL
 HORIZONTAL
 
-TEXTBOX
-325
-577
-475
-605
-Rate at which patients DNA\nat each level
-11
-0.0
-1
-
 SLIDER
-61
-500
-237
-533
+56
+446
+232
+479
 Emergency_Pres
 Emergency_Pres
 0
@@ -845,10 +836,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-61
-535
-240
-568
+56
+482
+235
+515
 Emergency_to_Accepted
 Emergency_to_Accepted
 0
@@ -860,10 +851,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-62
-575
-237
-608
+58
+522
+233
+555
 Employer_From_GP_Rate
 Employer_From_GP_Rate
 0
@@ -873,23 +864,6 @@ Employer_From_GP_Rate
 1
 NIL
 HORIZONTAL
-
-BUTTON
-520
-571
-666
-604
-System Performance
-ask patches [ set pcolor black ] 
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 SLIDER
 696
@@ -999,10 +973,10 @@ NIL
 1
 
 SLIDER
-62
-613
-235
-646
+58
+560
+231
+593
 New_General
 New_General
 0
@@ -1014,10 +988,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-60
-652
-233
-685
+55
+599
+228
+632
 New_LodgeClaim
 New_LodgeClaim
 0
@@ -1028,45 +1002,13 @@ New_LodgeClaim
 NIL
 HORIZONTAL
 
-SLIDER
-61
-690
-234
-723
-Review_General
-Review_General
-0
-100
-49.0
-1
-1
-NIL
-HORIZONTAL
-
-BUTTON
-1693
-243
-1835
-277
-Mass-Incident
-create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 INPUTBOX
 497
 654
 591
 714
 Review_Capacity
-50.0
+500.0
 1
 0
 Number
@@ -1077,7 +1019,7 @@ INPUTBOX
 683
 714
 New_Capacity
-100.0
+1000.0
 1
 0
 Number
@@ -1136,7 +1078,7 @@ MaxWorkers
 MaxWorkers
 0
 2000
-2000.0
+1000.0
 50
 1
 NIL
@@ -1173,10 +1115,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-88
-235
-251
-257
+82
+180
+245
+202
 No Barrier to High Barrier
 14
 0.0
@@ -1281,10 +1223,10 @@ PENS
 "Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers ] "
 
 SLIDER
-60
-765
-235
-798
+55
+679
+230
+712
 Dispute_to_General
 Dispute_to_General
 0
@@ -1296,10 +1238,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-59
-803
-232
-838
+55
+718
+228
+753
 Success_Dispute_Lodge
 Success_Dispute_Lodge
 0
@@ -1334,7 +1276,7 @@ Recovery_Threshold
 Recovery_Threshold
 0
 100
-80.0
+55.0
 1
 1
 NIL
@@ -1349,37 +1291,22 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-70.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-37
-47
-185
-80
+18
+58
+166
+91
 Injured_Workers
 Injured_Workers
 0
 100
-20.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-1668
-22
-1841
-57
-Mental_health_freq
-Mental_health_freq
-0
-100
-5.0
+15.0
 1
 1
 NIL
@@ -1412,11 +1339,45 @@ Accept_Threshold
 Accept_Threshold
 0
 2
-0.1
+0.3
 .1
 1
 NIL
 HORIZONTAL
+
+BUTTON
+520
+571
+666
+604
+System Performance
+ask patches [ set pcolor black ] 
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1442
+405
+1591
+445
+Mass-Incident
+create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
