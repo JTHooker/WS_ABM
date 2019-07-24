@@ -163,7 +163,6 @@ to go
 
   ask OccRehabResources [ GoHelp ]
 
-
   ask turtles [
     set size (5 + sqrt count Workers in-radius 1 )
       ]
@@ -224,16 +223,16 @@ to BecomeAcceptedClaim
   and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Treatment_Capacity and (random-normal 0.6 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
   face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
 
-   if Label = "M" and InLodgeClaim = 1 and any? LodgeClaims-here
-   and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Treatment_Capacity and (random-normal 0.4 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
-   face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
+  if Label = "M" and InLodgeClaim = 1 and any? LodgeClaims-here
+  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Treatment_Capacity and (random-normal 0.4 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
+  face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
 
   if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 set InSystem 1 set Entrytime ticks ]
 
 end
 
 to AccessTreatment
-    if Accepted_to_treatment < random 100 and InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [  InTreatment = 1 ] < Assessment_Capacity  [
+    if InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [ InTreatment = 1 ] < Treatment_Capacity  [
       face one-of TreatmentCentres fd speed  set Goingtotreatment 1 Set InClaimAccepted 0  ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health ( health + (1 * Responsiveness ))]
@@ -266,7 +265,7 @@ to TreatmentToGeneral
 end
 
 to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
-   if (health + (100 - trust )) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if (health + (100 - trust ) + PromoteRecoverAtWork ) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
@@ -450,7 +449,7 @@ to GoHelp
 end
 
 to ChangeHealth
-  set health health + random 0 1
+  set health health + one-of [ -1 0 1 ]
 end
 
 @#$#@#$#@
@@ -555,8 +554,8 @@ count Workers with [ inGP = 1 ] * 10
 PLOT
 312
 18
-952
-244
+670
+246
 Worker States
 Time
 Amount
@@ -695,21 +694,6 @@ Acute_Care_Barrier
 0
 100
 70.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-49
-235
-224
-268
-Accepted_to_Treatment
-Accepted_to_Treatment
-1
-100
-25.0
 1
 1
 NIL
@@ -955,7 +939,7 @@ BUTTON
 1091
 694
 Day_Off
-\nif remainder ticks Processing_Capacity = 0 [ \nset Assessment_Capacity 0 ]\n\n\nif remainder ticks Processing_Capacity = 1 [ \nset Assessment_Capacity 50 ]\n
+\nif remainder ticks Processing_Capacity = 0 [ \nset Assessment_Capacity 0 ]\n\n\nif remainder ticks Processing_Capacity = 1 [ \nset Assessment_Capacity 100 ]\n
 T
 1
 T
@@ -1020,10 +1004,10 @@ mean [ trust ] of workers with [ InSystem = 1 ]
 11
 
 PLOT
-966
-173
-1324
-323
+688
+195
+1328
+345
 Trust histogram
 NIL
 NIL
@@ -1088,10 +1072,10 @@ PENS
 "Association" 1.0 0 -16777216 true "" " plot mean [ newassociationstrength * 10 ] of workers "
 
 PLOT
-961
-16
+686
+22
 1325
-166
+185
 Overall Trust
 NIL
 NIL
@@ -1103,8 +1087,9 @@ true
 true
 "" ""
 PENS
-"Mean Trust" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers ]"
-"Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers ] "
+"Mean Trust" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers with [ insystem = 1 ] ]"
+"Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers with [ insystem = 1 ] ] "
+"Mean Health" 1.0 0 -14070903 true "" "if ticks > 0 [ plot mean [ health ] of workers with [ insystem = 1 ] ] "
 
 SLIDER
 48
@@ -1130,7 +1115,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-61.0
+50.0
 1
 1
 NIL
@@ -1160,7 +1145,7 @@ Recovery_Threshold
 Recovery_Threshold
 0
 100
-58.0
+79.0
 1
 1
 NIL
@@ -1175,7 +1160,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-60.0
+50.0
 1
 1
 NIL
@@ -1264,30 +1249,30 @@ NIL
 1
 
 SLIDER
-935
-619
-1093
-652
-Assessment_Capacity
-Assessment_Capacity
+1096
+620
+1254
+653
+Treatment_Capacity
+Treatment_Capacity
 0
-100
-100.0
+1000
+417.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1093
-618
-1266
-651
-Treatment_Capacity
-Treatment_Capacity
+912
+620
+1091
+655
+Assessment_Capacity
+Assessment_Capacity
 0
-1000
-1000.0
+100
+40.0
 1
 1
 NIL
@@ -1318,6 +1303,21 @@ SendORs
 1
 1
 -1000
+
+SLIDER
+316
+779
+489
+814
+PromoteRecoveratWork
+PromoteRecoveratWork
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
