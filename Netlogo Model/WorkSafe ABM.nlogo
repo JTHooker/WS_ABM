@@ -127,7 +127,7 @@ end
 
 to go
   ask workers [
-    initialise
+    Initialise
     GPreferral
     Emergency
     Disputesincare
@@ -235,7 +235,7 @@ to AccessTreatment
     if InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [ InTreatment = 1 ] < Treatment_Capacity  [
       face one-of TreatmentCentres fd speed  set Goingtotreatment 1 Set InClaimAccepted 0  ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health ( health + (1 * Responsiveness ))]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health (health + ((100 - health) * .05 ) * Responsiveness )]
 
 if Emergency_to_Accepted > random 100 and InEmergency = 1 and any? AcuteCares-here [
       face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InEmergency 0 ]
@@ -563,10 +563,6 @@ PENS
 "Treated Patients" 1.0 0 -14454117 true "" "plot count workers with [ inTreatment = 1 ] "
 "With GP" 1.0 0 -2674135 true "" "plot count workers with [ InGP = 1 ] "
 "Waiting to Lodge" 1.0 0 -16777216 true "" "plot count workers with [ inLodgeClaim = 1 ] "
-"Trust of Accepted" 1.0 0 -7500403 true "" "plot mean [ trust ] of workers with [ inSystem = 1 ] "
-"Trust In Waitlist" 1.0 0 -955883 true "" "plot mean [ trust ] of workers with [ inLodgeClaim = 1 ] "
-"Trust In New" 1.0 0 -1184463 true "" "plot mean [ trust ] of workers with [ inClaimAccepted = 1 ] "
-"Trust In Treated" 1.0 0 -865067 true "" "plot mean [ trust ] of workers with [ inTreatment = 1 ] "
 
 MONITOR
 775
@@ -1107,7 +1103,7 @@ Recovery_Threshold
 Recovery_Threshold
 0
 100
-59.0
+72.0
 1
 1
 NIL
@@ -1170,7 +1166,7 @@ Accept_Threshold
 Accept_Threshold
 0
 2
-0.3
+0.5
 .1
 1
 NIL
@@ -1248,8 +1244,8 @@ SLIDER
 Max_Claim_Duration
 Max_Claim_Duration
 0
-1000
-1000.0
+200
+167.0
 1
 1
 NIL
@@ -1275,7 +1271,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
--2.0
+7.0
 1
 1
 NIL
