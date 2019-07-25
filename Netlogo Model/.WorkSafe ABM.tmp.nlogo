@@ -44,6 +44,9 @@ Workers-own ; Attributes that individual Workers have or are in at any stage
   GoingtoLodgeClaim
   GoingtoVicPops
 
+  DynClaimTime
+  FinalClaimTime
+
   InSystem ;; They have had their claim accepted
   Trust ;; Trust in the system that increases if they have a good experience and decreases if their expectations aren't met
   Memory ;; A boolean memory variable related to their recollection of past treatment or service events
@@ -74,9 +77,8 @@ Workers-own ; Attributes that individual Workers have or are in at any stage
 ]
 
 Employer1s-own [
-  readiness ;; How ready the employer is to take the worker back with adjusted duties
+  Readiness ;; How ready the employer is to take the worker back with adjusted duties
 ]
-
 
 to setup
   clear-all
@@ -88,11 +90,11 @@ to setup
   create-NoRecoverys 1 [ set shape "Garbage Can"  set size 5 set label "No Recovery" set xcor 19.22 set ycor 5.33 set color white]
   create-TreatmentCentres 1 [ set shape "Building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color grey ]
   create-Disputes 1 [ set shape "Exclamation"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
-  create-Employer1s 1 [ set shape "person construction" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color white set readiness random-normal 50 10 ]
+  create-Employer1s 1 [ set shape "person construction" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color white set readiness random-normal 1 .1 ]
   create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red ]
   create-OccRehabProviders 1 [ set shape "box" set size 5 set label "Occ Rehab Provider" set xcor 36.08 set ycor 42.25 set color yellow ]
   create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
-  create-OccRehabResources 1 [ set shape "dot" set color blue move-to one-of OccRehabProviders set Addcap random-normal 20 2 set CostofAddCap ( Addcap / 10 )]
+  create-OccRehabResources 1 [ set shape "dot" set color blue move-to one-of OccRehabProviders set Addcap 1 set CostofAddCap AddCap ]
   ask turtles [ create-links-with other turtles show label ]
   create-workers Population [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
@@ -161,7 +163,10 @@ to go
     TimeOut
   ]
 
-  ask OccRehabResources [ GoHelp ]
+  ask OccRehabResources [ GoHelp ChangeAddcap ]
+
+
+  ask Employer1s [ Recalculatereadiness ]
 
   ask turtles [
     set size (5 + sqrt count Workers in-radius 1 )
@@ -235,7 +240,7 @@ to AccessTreatment
     if InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [ InTreatment = 1 ] < Treatment_Capacity  [
       face one-of TreatmentCentres fd speed  set Goingtotreatment 1 Set InClaimAccepted 0  ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health (((100 - health) * .05 ) * Responsiveness )]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health (health + ((100 - health) * .05 ) * Responsiveness )]
 
 if Emergency_to_Accepted > random 100 and InEmergency = 1 and any? AcuteCares-here [
       face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InEmergency 0 ]
@@ -258,14 +263,14 @@ to OverCapReview
 end
 
 to TreatmentToGeneral
-   if health > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if health > Claim_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of VicPops fd speed set GoingtoVicPops 1 set InTreatment 0 ]
      if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
     if any? VicPops in-radius 1 [ move-to one-of VicPops die ]
 end
 
 to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
-   if (health + (PromoteRecoveryAtWork + random 5 - random 5 )) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if (health + (PromoteRecoveryAtWork + random 5 - random 5 )) > Claim_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
@@ -304,14 +309,8 @@ end
 
 ;;******************************************
 
-to ReturntoWork ;; trust is going to affec the DNA2 rate here
-  if health + [ readiness ] of one-of Employer1s > random 100 and InEmployer1 = 1 and any? Employer1s-here [
-     face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 ]
-  if GoingtoRTW = 1 [ face one-of RTWs fd speed if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 set InEmployer1 0 set GoingtoRTW 0 ]] ;; then people need to actually ret from the pool
-end
-
 to EmployernotReady ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
-  if [ readiness ] of one-of Employer1s < 50 and any? Employer1s-here [
+  if [ readiness ] of one-of Employer1s > 1 and any? Employer1s-here [
       face one-of RTWs fd speed  set GoingtoRTW 1 Set InRTW 0 ]
     if GoingtoRTW = 1 [ face one-of RTWs fd speed  ]
       if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 Set InEmployer1 0 set GoingtoRTW 0 ]
@@ -323,9 +322,23 @@ if Trust > random 100 and InRTW = 1 and any? RTWs-here [
       if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
 end
 
+
+to ReturntoWork ;;
+  if ( health * ([ Readiness ] of one-of Employer1s - PromoteRecoveryAtWork ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
+  any? Employer1s-here and any? Occrehabresources-here [
+    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 ]
+    if GoingtoRTW = 1 [ face one-of RTWs fd speed if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 set InEmployer1 0 set GoingtoRTW 0 ]] ;; then people need to actually ret from the pool
+end
+
+to ReturntoWorkwithOccRehab ;; trust is going to affec the DNA2 rate here
+  if (health * ([ Readiness ] of one-of Employer1s ) ) > Claim_Threshold and InRTW = 1 and any? RTWs-here [
+     face one-of VicPops fd speed set GoingtoVicPops 1 set InRTW 0 set FinalClaimTime DynClaimTime  ]
+  if GoingtoVicPops = 1 [ face one-of VicPops fd speed if any? VicPops in-radius 1 [ move-to one-of VicPops die ]] ;; then people need to actually ret from the pool
+end
+
 to Disputesincare
 
- if ((100 - trust ) / 10 ) > random 1000 and InLodgeClaim = 1 and any? LodgeClaims-here [
+ if ((100 - trust ) / 10 ) > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
     face one-of Disputes fd speed set GoingtoDispute 1 ]
   if GoingtoDispute = 1 [ face one-of Disputes fd speed  if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .9 set trust trust * .5 ]]
 
@@ -432,18 +445,27 @@ to CountWageReplacementCosts
 end
 
 to timeout
-  if InSystem = 1 [ if ticks - entrytime > (max_claim_duration - 1) [ set shape "star" set color yellow  ] ]
+  if InSystem = 1 [ if ticks - entrytime > (max_claim_duration - 2) [ set size 20 set shape "star" set color yellow   ] ]
   if InSystem = 1 [ if ticks - entrytime > max_claim_duration [ leaveWS ] ]
+  set dynclaimtime  ( ticks - entrytime )
 end
 
 to GoHelp
-  if SendORs = true [ face one-of RTWs fd .5 if any? RTWs in-radius 1 [ move-to one-of RTWs  ]]
+  if SendORs = true [ face one-of Employer1s fd .5 if any? Employer1s in-radius 1 [ move-to one-of Employer1s  ]]
+  if SendORs = false [ face one-of OccRehabProviders fd .5 if any? OccRehabProviders in-radius 1 [ move-to one-of OccrehabProviders ] ]
 end
 
 to ChangeHealth
   set health health + one-of [ -1 0 1 ]
 end
 
+to ChangeAddcap
+  set AddCap random-normal ORCapacity .1
+end
+
+To Recalculatereadiness
+  set readiness random-normal 1 .1
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 1336
@@ -563,6 +585,7 @@ PENS
 "Treated Patients" 1.0 0 -14454117 true "" "plot count workers with [ inTreatment = 1 ] "
 "With GP" 1.0 0 -2674135 true "" "plot count workers with [ InGP = 1 ] "
 "Waiting to Lodge" 1.0 0 -16777216 true "" "plot count workers with [ inLodgeClaim = 1 ] "
+"In RTW Pool" 1.0 0 -11221820 true "" "plot count workers with [ InRTW = 1 ] + count workers with [ goingtoRTW = 1 ] "
 
 MONITOR
 775
@@ -700,9 +723,9 @@ count workers with [ inLodgeClaim = 1 ] * 10
 
 SLIDER
 52
-323
+262
 228
-356
+295
 Emergency_Pres
 Emergency_Pres
 0
@@ -715,9 +738,9 @@ HORIZONTAL
 
 SLIDER
 52
-358
+298
 231
-391
+331
 Emergency_to_Accepted
 Emergency_to_Accepted
 0
@@ -730,9 +753,9 @@ HORIZONTAL
 
 SLIDER
 52
-398
+338
 227
-431
+371
 Employer_From_GP_Rate
 Employer_From_GP_Rate
 0
@@ -804,10 +827,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-63
-692
-236
-725
+50
+499
+223
+532
 ExperienceSaliency
 ExperienceSaliency
 0
@@ -819,10 +842,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-64
-728
-237
-761
+52
+536
+225
+569
 ExpectationSaliency
 ExpectationSaliency
 0
@@ -851,25 +874,10 @@ NIL
 1
 
 SLIDER
-52
-437
-225
-470
-New_General
-New_General
-0
-100
-35.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
 50
-475
+376
 223
-508
+409
 New_LodgeClaim
 New_LodgeClaim
 0
@@ -982,10 +990,10 @@ PENS
 "Satisfaction" 1.0 0 -14439633 true "" "histogram [ Satisfaction ] of workers"
 
 SLIDER
-65
-768
-238
-801
+53
+576
+226
+609
 ManageExpectations
 ManageExpectations
 0
@@ -997,10 +1005,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-65
-808
-240
-841
+53
+616
+228
+649
 Error_of_Estimate
 Error_of_Estimate
 0
@@ -1051,9 +1059,9 @@ PENS
 
 SLIDER
 50
-555
+418
 230
-588
+451
 Dispute_to_General
 Dispute_to_General
 0
@@ -1066,9 +1074,9 @@ HORIZONTAL
 
 SLIDER
 50
-593
+455
 229
-626
+488
 Success_Dispute_%
 Success_Dispute_%
 0
@@ -1095,21 +1103,6 @@ NIL
 HORIZONTAL
 
 SLIDER
-319
-610
-491
-643
-Recovery_Threshold
-Recovery_Threshold
-0
-100
-72.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
 318
 650
 490
@@ -1118,7 +1111,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-50.0
+80.0
 1
 1
 NIL
@@ -1245,7 +1238,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-167.0
+165.0
 1
 1
 NIL
@@ -1271,8 +1264,23 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-7.0
+6.0
 1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+58
+663
+231
+698
+ORCapacity
+ORCapacity
+0
+2
+0.0
+.01
 1
 NIL
 HORIZONTAL
