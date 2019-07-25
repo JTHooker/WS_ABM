@@ -135,7 +135,6 @@ to go
     AccessTreatment
     TreatmenttoEmployer
     ReturntoWork
-    OccRehabSupport
     becomeNoRecovery
     UntreatedReEnter
     EmployernotReady
@@ -216,15 +215,15 @@ end
 
 to BecomeAcceptedClaim
   if Label = "A" and InLodgeClaim = 1 and any? LodgeClaims-here
-  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Treatment_Capacity and (random-normal 0.9 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
+  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.9 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
   face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
 
    if Label = "C" and InLodgeClaim = 1 and any? LodgeClaims-here
-  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Treatment_Capacity and (random-normal 0.6 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
+  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.6 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
   face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
 
   if Label = "M" and InLodgeClaim = 1 and any? LodgeClaims-here
-  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Treatment_Capacity and (random-normal 0.4 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
+  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.4 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
   face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
 
   if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 set InSystem 1 set Entrytime ticks ]
@@ -244,28 +243,28 @@ if Emergency_to_Accepted > random 100 and InEmergency = 1 and any? AcuteCares-he
 end
 
 to OverCapNew
-  if inClaimAccepted = 1 and count Workers with [ inClaimAccepted = 1 ] > Treatment_Capacity [
+  if inClaimAccepted = 1 and count Workers with [ inClaimAccepted = 1 ] > Assessment_Capacity [
     face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InClaimAccepted 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InClaimAccepted 0 set GoingtoLodgeClaim 0  ]
 end
 
 to OverCapReview
-    if InTreatment = 1 and count Workers with [ InTreatment = 1 ] > Assessment_Capacity [
+    if InTreatment = 1 and count Workers with [ InTreatment = 1 ] > Treatment_Capacity [
     face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 set InTreatment 0 ]
     if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
         if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 set InTreatment 0 set goingtoClaimAccepted 0 ]
 end
 
 to TreatmentToGeneral
-   if (health + (100 - trust)) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if health > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of VicPops fd speed set GoingtoVicPops 1 set InTreatment 0 ]
      if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
     if any? VicPops in-radius 1 [ move-to one-of VicPops die ]
 end
 
 to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
-   if (health + (100 - trust ) + PromoteRecoverAtWork ) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if (health + (PromoteRecoveryAtWork + random 5 - random 5 )) > Recovery_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
@@ -279,22 +278,22 @@ to EmployerFromGP ;; trust is going affect the DNA rate here
 end
 
 to TestDispute
-   if Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here and InSystem = 0 [
+   if InSystem = 0 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here [ ;; so this send people who have a successful claim dispute back to the Claim Lodgement stage - they are not in the system yet
      face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0 set trust (trust * .9) ]
     if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed ]
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
 end
 
 to DisputetoGeneral
-    if Success_Dispute_% < random 100 and InDispute = 1 and any? Disputes-here and InSystem = 1 [
+    if InSystem = 0 and Success_Dispute_% < random 100 and InDispute = 1 and any? Disputes-here [ ;; so this send people who have an unsuccessful claim dispute back to the general population of workers
     face one-of VicPops fd speed  set GoingtoVicPops 1 set InDispute 0  ]
      if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
     if any? VicPops in-radius 1 [ move-to one-of VicPops die  ]
 end
 
 to DisputeToTreatment
-  if Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here and InSystem = 1 [
-     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set InDispute 0 set trust (trust * .9) set satisfaction satisfaction * .95 ]
+  if InSystem = 1 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here [
+     face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set InDispute 0 set trust (trust * .9) set satisfaction satisfaction * .9 ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
     if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set health (health * responsiveness) ]
 end
@@ -317,13 +316,6 @@ if Trust > random 100 and InRTW = 1 and any? RTWs-here [
       face one-of VicPops fd speed  set GoingtoVicPops 1 Set InRTW 0 ]
     if GoingtoVicPops = 1 [ face one-of VicPops fd speed  ]
       if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
-end
-
-to OccRehabSupport
-    if Occ_Rehab_Support_Need > random 100 and InRTW = 1 and any? RTWs-here [
-     face one-of OccRehabProviders fd speed  set GoingtoOccRehabProvider 1 Set InRTW 0 ]
-     if GoingtoOccRehabProvider = 1 [ face one-of OccRehabProviders fd speed ]
-    if any? OccRehabProviders in-radius 1 [ move-to one-of OccRehabProviders Set InRTW 0 set InOccRehabProvider 1 set GoingtoOccRehabProvider 0 ]
 end
 
 to Disputesincare
@@ -481,10 +473,10 @@ ticks
 30.0
 
 BUTTON
-942
-466
-1007
-499
+915
+468
+980
+501
 setup
 setup
 NIL
@@ -498,10 +490,10 @@ NIL
 1
 
 BUTTON
-942
-506
-1007
-539
+915
+508
+980
+541
 go
 go
 T
@@ -574,7 +566,7 @@ PENS
 "Trust of Accepted" 1.0 0 -7500403 true "" "plot mean [ trust ] of workers with [ inSystem = 1 ] "
 "Trust In Waitlist" 1.0 0 -955883 true "" "plot mean [ trust ] of workers with [ inLodgeClaim = 1 ] "
 "Trust In New" 1.0 0 -1184463 true "" "plot mean [ trust ] of workers with [ inClaimAccepted = 1 ] "
-"Trust In Review" 1.0 0 -13345367 true "" "plot mean [ trust ] of workers with [ inTreatment = 1 ] "
+"Trust In Treated" 1.0 0 -865067 true "" "plot mean [ trust ] of workers with [ inTreatment = 1 ] "
 
 MONITOR
 775
@@ -694,21 +686,6 @@ Acute_Care_Barrier
 0
 100
 70.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-48
-465
-230
-498
-Occ_Rehab_Support_Need
-Occ_Rehab_Support_Need
-0
-100
-3.0
 1
 1
 NIL
@@ -876,10 +853,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-941
-546
-1021
-580
+913
+548
+993
+582
 Go Once
 Go
 NIL
@@ -1115,7 +1092,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-50.0
+0.0
 1
 1
 NIL
@@ -1257,7 +1234,7 @@ Treatment_Capacity
 Treatment_Capacity
 0
 1000
-417.0
+344.0
 1
 1
 NIL
@@ -1272,7 +1249,7 @@ Assessment_Capacity
 Assessment_Capacity
 0
 100
-40.0
+49.0
 1
 1
 NIL
@@ -1287,7 +1264,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-161.0
+76.0
 1
 1
 NIL
@@ -1307,10 +1284,10 @@ SendORs
 SLIDER
 316
 779
-489
+495
 814
-PromoteRecoveratWork
-PromoteRecoveratWork
+PromoteRecoveryatWork
+PromoteRecoveryatWork
 0
 100
 0.0
