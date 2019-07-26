@@ -88,15 +88,15 @@ to setup
   create-LodgeClaims 1 [ set shape "Insurer" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color white set heading 0 ]
   create-ClaimAccepteds 1 [ set shape "computer workstation" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color white ]
   create-NoRecoverys 1 [ set shape "Garbage Can"  set size 5 set label "No Recovery" set xcor 19.22 set ycor 5.33 set color white]
-  create-TreatmentCentres 1 [ set shape "Hospital"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color white ]
-  create-Disputes 1 [ set shape "Lawyer"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
-  create-Employer1s 1 [ set shape "Employer" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color white set readiness random-normal 1 .1 ]
+  create-TreatmentCentres 1 [ set shape "Health Care"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color white ]
+  create-Disputes 1 [ set shape "Face sad"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
+  create-Employer1s 1 [ set shape "Building" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color white set readiness random-normal 1 .1 ]
   create-RTWs 1 [ set shape "pool" set size 5 set label "Return to Work Pool" set xcor 36.08 set ycor 42.25 set color red ]
-  create-OccRehabProviders 1 [ set shape "box" set size 5 set label "Occ Rehab Provider"  set xcor 43.65 set ycor 33.52 set color yellow ]
+  create-OccRehabProviders 1 [ set shape "OR" set size 5 set label "Occ Rehab Provider"  set xcor 43.65 set ycor 33.52 set color yellow ]
   create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
-  create-OccRehabResources 1 [ set shape "dot" set color blue move-to one-of OccRehabProviders set Addcap 1 set CostofAddCap AddCap ]
-  ask turtles [ create-links-with other turtles show label ]
-  create-workers Population [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
+  create-OccRehabResources 1 [ set shape "OR1" set color blue move-to one-of OccRehabProviders set Addcap 1 set CostofAddCap AddCap ]
+  ;;ask turtles [ create-links-with other turtles show label ]
+  create-workers Population [ set shape one-of [ "person" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations
     set health random-normal 50 10 isClaimType set salary random-normal 55 10 set salary (salary ^ 1.2) ]
@@ -164,7 +164,7 @@ to go
     TimeOut
   ]
 
-  ask OccRehabResources [ GoHelp ChangeAddcap ]
+  ask OccRehabResources [ GoHelp ChangeAddcap changeshape ]
 
 
   ask Employer1s [ Recalculatereadiness ]
@@ -347,7 +347,7 @@ to ClaimAfterMisdiagnosis
   if InSystem = 0 and any? Employer1s-here and health < Claim_Threshold and inEmployer1 = 1 [
     face one-of LodgeClaims fd speed set GoingtoEmployer1 0 set inEmployer1 0 set goingtoLodgeClaim 1 ]
    if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed  ]
-      if any? LodgeClaimss in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set Goingto 0 ]
+      if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
 end
 
 
@@ -481,15 +481,19 @@ end
 To Recalculatereadiness
   set readiness random-normal 1 .1
 end
+
+to changeshape
+  ifelse remainder ticks 10 < 5 [ set shape "OR1" ] [ set shape "OR2" ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-1336
-16
-1889
-570
+1388
+33
+2333
+979
 -1
 -1
-10.7
+12.804
 1
 10
 1
@@ -704,7 +708,7 @@ GP_Referral_Barrier
 GP_Referral_Barrier
 0
 100
-77.0
+50.0
 1
 1
 NIL
@@ -719,7 +723,7 @@ Acute_Care_Barrier
 Acute_Care_Barrier
 0
 100
-70.0
+50.0
 1
 1
 NIL
@@ -857,21 +861,6 @@ NIL
 NIL
 NIL
 1
-
-SLIDER
-50
-376
-223
-409
-New_LodgeClaim
-New_LodgeClaim
-0
-100
-0.0
-1
-1
-NIL
-HORIZONTAL
 
 MONITOR
 578
@@ -1066,7 +1055,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-7.0
+0.0
 1
 1
 NIL
@@ -1096,7 +1085,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-60.0
+65.0
 1
 1
 NIL
@@ -1136,25 +1125,25 @@ PENS
 "default" 1.0 0 -16777216 true "" "histogram [ salary ] of workers"
 
 SLIDER
-315
-738
-490
-771
+1490
+844
+1644
+878
 Accept_Threshold
 Accept_Threshold
 0
 2
-1.7
+1.0
 .1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-1544
-579
-1690
-612
+1806
+1016
+1952
+1049
 System Performance
 ask patches [ set pcolor black ] 
 NIL
@@ -1208,7 +1197,7 @@ Assessment_Capacity
 Assessment_Capacity
 0
 100
-100.0
+52.0
 1
 1
 NIL
@@ -1230,10 +1219,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-1908
-38
-2013
-73
+2260
+339
+2365
+374
 SendORs
 SendORs
 1
@@ -1241,15 +1230,15 @@ SendORs
 -1000
 
 SLIDER
-316
-779
-492
-814
+317
+735
+493
+770
 PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
--9.0
+0.0
 1
 1
 NIL
@@ -1279,7 +1268,7 @@ Emergency_Pres
 Emergency_Pres
 0
 100
-76.0
+50.0
 1
 1
 NIL
@@ -1309,11 +1298,28 @@ DiagNosisError
 DiagNosisError
 0
 20
-10.0
+0.0
 1
 1
 NIL
 HORIZONTAL
+
+BUTTON
+79
+777
+188
+811
+NIL
+Burn_Patches
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1333,6 +1339,7 @@ Polygon -7500403 true true 150 0 135 15 120 60 120 105 15 165 15 195 120 180 135
 ambulance
 false
 0
+Circle -2674135 true false -15 -15 330
 Rectangle -1 true false 30 90 210 195
 Polygon -1 true false 296 190 296 150 259 134 244 104 210 105 210 190
 Rectangle -1 true false 195 60 195 105
@@ -1372,6 +1379,22 @@ Circle -7500403 true true 110 127 80
 Circle -7500403 true true 110 75 80
 Line -7500403 true 150 100 80 30
 Line -7500403 true 150 100 220 30
+
+building
+false
+0
+Circle -7500403 true true -21 -21 342
+Polygon -13345367 true false 53 263 110 24 194 27 245 263
+Polygon -11221820 true false 110 24 64 82 31 211 55 263
+Polygon -13345367 false false 84 187 89 186 82 220
+Polygon -11221820 true false 89 193 83 219 114 219 113 193
+Polygon -11221820 true false 173 38 173 60 189 60 186 38
+Polygon -11221820 true false 160 69 160 91 178 92 174 70
+Polygon -11221820 true false 106 110 100 136 122 137 122 110
+Polygon -11221820 true false 185 161 184 187 212 187 207 162
+Polygon -16777216 true false 137 215 122 263 179 263 169 215
+Polygon -13345367 true false 65 91 61 111 72 105 76 83
+Polygon -13345367 true false 61 163 56 180 66 192 76 155
 
 building institution
 false
@@ -1442,6 +1465,7 @@ Circle -16777216 true false 135 135 30
 computer workstation
 false
 0
+Circle -955883 true false -31 -31 361
 Polygon -1 true false 60 180 15 240 286 240 240 180
 Polygon -1 true false 62 180 62 59 69 49 229 48 238 57 239 180
 Rectangle -16777216 true false 66 56 231 178
@@ -1470,29 +1494,6 @@ false
 0
 Circle -7500403 true true 0 0 300
 
-dot
-false
-0
-Circle -7500403 true true 90 90 120
-
-employer
-false
-2
-Polygon -1184463 true false 114 79 183 80 176 24 149 16 118 28
-Polygon -1 true false 118 91 108 143 109 191 126 120 176 119 193 188 197 146 181 90
-Polygon -13345367 true false 173 183 127 184 112 244 102 294 132 267 152 254 180 257 197 265 195 250
-Line -16777216 false 148 143 150 196
-Rectangle -16777216 true false 118 188 184 200
-Circle -1 true false 152 143 9
-Circle -1 true false 152 166 9
-Rectangle -16777216 true false 179 164 183 186
-Polygon -955883 true true 180 89 179 118 173 160 195 194 150 194 150 119 180 89
-Polygon -955883 true true 120 89 121 101 127 157 105 194 150 194 150 119 120 89
-Polygon -7500403 true false 131 35 123 64 140 73 132 90 165 91 159 72 173 67 166 36
-Circle -16777216 false false 152 47 6
-Circle -16777216 false false 138 47 6
-Line -16777216 false 139 65 157 64
-
 exclamation
 false
 0
@@ -1518,14 +1519,23 @@ Rectangle -16777216 true false 60 195 240 225
 face sad
 false
 0
-Circle -7500403 true true 8 8 285
-Circle -16777216 true false 60 75 60
-Circle -16777216 true false 180 75 60
-Polygon -16777216 true false 150 168 90 184 62 210 47 232 67 244 90 220 109 205 150 198 192 205 210 220 227 242 251 229 236 206 212 183
+Circle -2674135 true false -33 -28 358
+Circle -16777216 true false 62 76 60
+Circle -16777216 true false 168 76 60
+Rectangle -16777216 true false 75 75 150 60
+Polygon -16777216 true false 203 61 174 68 152 101 179 77 208 68 235 68 223 48
+Polygon -16777216 true false 93 60 111 71 133 98 107 78 78 69 51 69 74 41
+Circle -1 true false 102 89 13
+Circle -1 true false 206 87 13
+Line -16777216 false 121 110 80 192
+Line -16777216 false 80 193 151 178
+Polygon -16777216 true false 45 231 207 188 229 259 187 220
+Polygon -1 true false 206 188 117 218 47 228
 
 factory
 false
 0
+Circle -8630108 true false -75 -60 450
 Rectangle -7500403 true true 76 194 285 270
 Rectangle -7500403 true true 36 95 59 231
 Rectangle -16777216 true false 90 210 270 240
@@ -1542,6 +1552,12 @@ Circle -1 true false 96 21 42
 Circle -1 true false 105 40 32
 Circle -1 true false 129 19 42
 Rectangle -7500403 true true 14 228 78 270
+Polygon -7500403 true true 75 195 120 135 120 195
+Polygon -7500403 true true 105 195 150 135 150 195
+Polygon -7500403 true true 135 195 180 135 180 195
+Polygon -7500403 true true 165 195 210 135 210 195
+Polygon -7500403 true true 195 195 240 135 240 195
+Polygon -7500403 true true 225 195 270 135 270 195
 
 fish
 false
@@ -1597,9 +1613,10 @@ Polygon -16777216 false false 112 52 112 66 127 51 162 64 170 87 185 85 192 71 1
 gp
 false
 2
+Circle -13840069 true false -15 0 330
 Polygon -2674135 true false 120 76 180 76 170 34 144 28 122 36
 Polygon -1 true false 118 90 75 209 105 194 126 119 176 118 195 194 225 209 181 89
-Polygon -13345367 true false 173 183 127 184 112 244 105 300 135 300 150 225 180 300 195 300 210 285
+Polygon -13345367 true false 189 202 123 192 112 243 105 299 135 299 150 225 180 299 210 299 184 256
 Line -16777216 false 148 143 150 196
 Rectangle -16777216 true false 118 188 184 200
 Circle -1 true false 152 143 9
@@ -1617,28 +1634,12 @@ Circle -2674135 false false 147 147 12
 Rectangle -2674135 true false 167 108 171 135
 Rectangle -2674135 true false 156 121 183 125
 
-hospital
+health care
 false
 15
-Polygon -1 true true 1 58 150 5 296 58
-Rectangle -1 true true -1 57 296 286
-Rectangle -16777216 false false 0 255 300 270
-Circle -1 true true 135 26 30
-Circle -16777216 false false 135 18 30
-Rectangle -16777216 false false -3 62 297 77
-Line -16777216 false 112 260 184 260
-Line -16777216 false 105 265 196 265
-Rectangle -2674135 true false 135 82 166 188
-Rectangle -2674135 true false 88 121 205 148
-Rectangle -16777216 false false 221 98 280 148
-Rectangle -16777216 false false 222 169 281 219
-Rectangle -16777216 false false 14 169 73 219
-Rectangle -16777216 false false 14 99 73 149
-Rectangle -16777216 false false 137 200 167 255
-Line -16777216 false 45 100 45 148
-Line -16777216 false 45 170 45 218
-Line -16777216 false 252 99 252 146
-Line -16777216 false 251 170 251 217
+Circle -1 true true 2 -2 302
+Rectangle -2674135 true false 69 122 236 176
+Rectangle -2674135 true false 127 66 181 233
 
 house
 false
@@ -1649,10 +1650,10 @@ Polygon -7500403 true true 15 120 150 15 285 120
 Line -16777216 false 30 120 270 120
 
 insurer
-true
+false
 0
 Polygon -13345367 true false 22 130 290 130 261 239 157 277 54 255
-Circle -13345367 true false 1 1 300
+Circle -13345367 true false -13 -13 328
 Circle -1 true false 30 8 240
 Circle -13345367 true false 26 82 72
 Circle -13345367 true false 87 81 72
@@ -1698,6 +1699,42 @@ line half
 true
 0
 Line -7500403 true 150 0 150 150
+
+or
+false
+2
+Circle -10899396 true false -14 -1 319
+Polygon -1184463 true false 114 79 183 80 176 24 149 16 118 28
+Polygon -1 true false 118 91 101 141 93 189 126 120 176 119 193 188 197 146 181 90
+Polygon -13345367 true false 173 183 127 184 112 244 102 294 132 267 160 256 180 257 197 265 195 250
+Line -16777216 false 148 143 150 196
+Rectangle -16777216 true false 118 188 184 200
+Circle -1 true false 152 143 9
+Circle -1 true false 152 166 9
+Polygon -955883 true true 180 89 179 118 173 160 195 194 150 194 150 119 180 89
+Polygon -955883 true true 120 89 121 101 127 157 105 194 150 194 150 119 120 89
+Polygon -7500403 true false 131 35 123 64 140 73 132 90 165 91 159 72 173 67 166 36
+Circle -16777216 false false 152 47 6
+Circle -16777216 false false 138 47 6
+Line -16777216 false 139 65 157 64
+Rectangle -16777216 false false 91 184 95 292
+Rectangle -16777216 false false 6 184 118 189
+
+or1
+false
+0
+Circle -2674135 true false 96 96 108
+Circle -1 true false 108 108 85
+Polygon -2674135 true false 120 180 135 195 121 245 107 246 125 190 125 190
+Polygon -2674135 true false 181 182 166 197 180 247 194 248 176 192 176 192
+
+or2
+false
+0
+Circle -2674135 true false 95 94 110
+Circle -1 true false 108 107 85
+Polygon -2674135 true false 130 197 148 197 149 258 129 258
+Polygon -2674135 true false 155 258 174 258 169 191 152 196
 
 pentagon
 false
