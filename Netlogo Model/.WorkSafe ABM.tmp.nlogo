@@ -83,16 +83,16 @@ Employer1s-own [
 to setup
   clear-all
   ask patches [ set pcolor black ]
-  create-GPs 1 [ set shape "person doctor" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color brown]
+  create-GPs 1 [ set shape "GP" set size 5 set label "GP" set xcor 13.92 set ycor 42.25 set color brown]
   create-AcuteCares 1 [ set shape "ambulance" set size 5 set label "Emergency Care" set xcor 6.35 set ycor 33.52 set color red ]
-  create-LodgeClaims 1 [ set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color white set heading 0 ]
+  create-LodgeClaims 1 [ set shape "Insurer" set size 5 set label "LodgeClaim" set xcor 4.71 set ycor 22.1 set color white set heading 0 ]
   create-ClaimAccepteds 1 [ set shape "computer workstation" set size 5 set label "Accepted_Claim" set xcor 9.51 set ycor 11.58 set color white ]
   create-NoRecoverys 1 [ set shape "Garbage Can"  set size 5 set label "No Recovery" set xcor 19.22 set ycor 5.33 set color white]
-  create-TreatmentCentres 1 [ set shape "Building institution"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color grey ]
-  create-Disputes 1 [ set shape "Exclamation"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
-  create-Employer1s 1 [ set shape "person construction" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color white set readiness random-normal 1 .1 ]
-  create-RTWs 1 [ set shape "box" set size 5 set label "Return to Work Pool" set xcor 43.65 set ycor 33.52 set color red ]
-  create-OccRehabProviders 1 [ set shape "box" set size 5 set label "Occ Rehab Provider" set xcor 36.08 set ycor 42.25 set color yellow ]
+  create-TreatmentCentres 1 [ set shape "Hospital"  set size 5 set label "Treatment Centre" set xcor 30.77 set ycor 5.33 set color white ]
+  create-Disputes 1 [ set shape "Lawyer"  set size 5 set label "Disputes" set xcor 40.49 set ycor 11.58 set color red ]
+  create-Employer1s 1 [ set shape "Employer" set size 5 set label "Employer" set xcor 45.29 set ycor 22.08 set color white set readiness random-normal 1 .1 ]
+  create-RTWs 1 [ set shape "pool" set size 5 set label "Return to Work Pool" set xcor 36.08 set ycor 42.25 set color red ]
+  create-OccRehabProviders 1 [ set shape "box" set size 5 set label "Occ Rehab Provider"  set xcor 43.65 set ycor 33.52 set color yellow ]
   create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
   create-OccRehabResources 1 [ set shape "dot" set color blue move-to one-of OccRehabProviders set Addcap 1 set CostofAddCap AddCap ]
   ask turtles [ create-links-with other turtles show label ]
@@ -114,7 +114,7 @@ to isClaimType
 end
 
 to setup-image
- ;; import-drawing "wslogo.jpg"
+  import-drawing "wslogo.jpg"
 end
 
 
@@ -145,6 +145,7 @@ to go
     EmployernotReady
     BecomeLodgeClaim
     EmployerfromGP
+    ClaimAfterMisDiagnosis
     TreatmentToGeneral
     Captrust
     CalculateTrustFactor
@@ -264,9 +265,9 @@ end
 
 to TreatmentToGeneral
    if health > Claim_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
-     face one-of VicPops fd speed set GoingtoVicPops 1 set InTreatment 0 ]
-     if GoingtoVicPops = 1 [ face one-of VicPops fd speed ]
-    if any? VicPops in-radius 1 [ move-to one-of VicPops die ]
+     face one-of RTWs fd speed set GoingtoRTW 1 set InTreatment 0 ]
+     if GoingtoRTW = 1 [ face one-of RTWs fd speed ]
+    if any? RTWs in-radius 1 [ move-to one-of RTWs set InRTW 1 set GoingtoRTW 0  ]
 end
 
 to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
@@ -277,7 +278,7 @@ to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
 end
 
 to EmployerFromGP ;; trust is going affect the DNA rate here
-  if (Employer_from_GP_Rate + (100 - trust) ) > random 100 and InGP = 1 and any? GPs-here and health > 50 [
+  if any? GPs-here and health > (Claim_Threshold - DiagnosisError ) [
      face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
@@ -316,18 +317,24 @@ to EmployernotReady ;; trust is going to affect the likelihood that anyone comes
       if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 Set InEmployer1 0 set GoingtoRTW 0 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
-if Trust > random 100 and InRTW = 1 and any? RTWs-here [
+  if Trust > random 100 and InRTW = 1 and any? RTWs-here [
       face one-of VicPops fd speed  set GoingtoVicPops 1 Set InRTW 0 ]
     if GoingtoVicPops = 1 [ face one-of VicPops fd speed  ]
       if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
 end
 
+;;;;Calculate this separately to see what's going on
+;;;;;****************************************************************           **************                  ************************
 
 to ReturntoWork ;;
-  if ( health * ([ Readiness ] of one-of Employer1s - PromoteRecoveryAtWork ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
-  any? Employer1s-here and any? Occrehabresources-here [
-    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 ]
-    if GoingtoRTW = 1 [ face one-of RTWs fd speed if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 set InEmployer1 0 set GoingtoRTW 0 ]] ;; then people need to actually ret from the pool
+  if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s - PromoteRecoveryAtWork ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
+  any? Employer1s-here [
+    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment CostsTreatment + 1 ]
+
+  if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s - PromoteRecoveryAtWork ) ) > Claim_Threshold and InEmployer1 = 1 and
+  any? Employer1s-here [
+    face one-of TreatmentCentres fd speed set GoingtoTreatment 1 set InEmployer1 0 set salary (salary * ( health / Claim_Threshold ))]
+    if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 set InEmployer1 0 set GoingtoTreatment 0 ]]
 end
 
 to ReturntoWorkwithOccRehab ;; trust is going to affec the DNA2 rate here
@@ -335,6 +342,14 @@ to ReturntoWorkwithOccRehab ;; trust is going to affec the DNA2 rate here
      face one-of VicPops fd speed set GoingtoVicPops 1 set InRTW 0 set FinalClaimTime DynClaimTime  ]
   if GoingtoVicPops = 1 [ face one-of VicPops fd speed if any? VicPops in-radius 1 [ move-to one-of VicPops die ]] ;; then people need to actually ret from the pool
 end
+
+to ClaimAfterMisdiagnosis
+  if InSystem = 0 and any? Employer1s-here and health < Claim_Threshold and inEmployer1 = 1 [
+    face one-of LodgeClaims fd speed set GoingtoEmployer1 0 set inEmployer1 0 set goingtoLodgeClaim 1 ]
+   if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed  ]
+      if any? LodgeClaimss in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set Goingto 0 ]
+end
+
 
 to Disputesincare
 
@@ -411,10 +426,10 @@ to resetinitial
 end
 
 to createClaimAccepteds
- create-Workers Injured_Workers [ set shape one-of [ "person" "person doctor" "person construction" "person business" "person farmer"] set state1 1 move-to one-of VicPops set color white set speed random-normal 1 .1
+ create-Workers Injured_Workers [ set shape one-of [ "person" "GP"  "person business" "person farmer"] set state1 1 move-to one-of VicPops set color white set speed random-normal 1 .1
     set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 IsClaimType
-    set salary random-normal 55 10 set salary (salary ^ 1.1) resettrust
+    set salary random-normal 55 10 set salary (salary ^ 1.2) resettrust
    ] ;;ifelse any? Workers with [ GoingtoVicPops = 1 ] and Expectation > random 100   set trust mean [ trust ] of Workers with [ GoingtoVicPops = 1 ] ][ set trust random-normal 80 10 resettrust
 
 end
@@ -720,36 +735,6 @@ count workers with [ inLodgeClaim = 1 ] * 10
 0
 1
 11
-
-SLIDER
-52
-262
-228
-295
-Emergency_Pres
-Emergency_Pres
-0
-100
-13.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-52
-298
-231
-331
-Emergency_to_Accepted
-Emergency_to_Accepted
-0
-100
-35.0
-1
-1
-NIL
-HORIZONTAL
 
 SLIDER
 52
@@ -1111,7 +1096,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-80.0
+60.0
 1
 1
 NIL
@@ -1159,7 +1144,7 @@ Accept_Threshold
 Accept_Threshold
 0
 2
-0.5
+1.7
 .1
 1
 NIL
@@ -1208,7 +1193,7 @@ Treatment_Capacity
 Treatment_Capacity
 0
 1000
-344.0
+1000.0
 1
 1
 NIL
@@ -1223,7 +1208,7 @@ Assessment_Capacity
 Assessment_Capacity
 0
 100
-49.0
+100.0
 1
 1
 NIL
@@ -1264,7 +1249,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-6.0
+-9.0
 1
 1
 NIL
@@ -1281,6 +1266,51 @@ ORCapacity
 2
 0.0
 .01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+58
+262
+231
+297
+Emergency_Pres
+Emergency_Pres
+0
+100
+76.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+58
+302
+230
+337
+Emergency_to_Accepted
+Emergency_to_Accepted
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+59
+712
+232
+747
+DiagNosisError
+DiagNosisError
+0
+20
+10.0
+1
 1
 NIL
 HORIZONTAL
@@ -1303,8 +1333,8 @@ Polygon -7500403 true true 150 0 135 15 120 60 120 105 15 165 15 195 120 180 135
 ambulance
 false
 0
-Rectangle -7500403 true true 30 90 210 195
-Polygon -7500403 true true 296 190 296 150 259 134 244 104 210 105 210 190
+Rectangle -1 true false 30 90 210 195
+Polygon -1 true false 296 190 296 150 259 134 244 104 210 105 210 190
 Rectangle -1 true false 195 60 195 105
 Polygon -16777216 true false 238 112 252 141 219 141 218 112
 Circle -16777216 true false 234 174 42
@@ -1313,13 +1343,11 @@ Rectangle -1 true false 288 158 297 173
 Rectangle -1184463 true false 289 180 298 172
 Rectangle -2674135 true false 29 151 298 158
 Line -16777216 false 210 90 210 195
-Rectangle -16777216 true false 83 116 128 133
 Rectangle -16777216 true false 153 111 176 134
 Line -7500403 true 165 105 165 135
-Rectangle -7500403 true true 14 186 33 195
-Line -13345367 false 45 135 75 120
-Line -13345367 false 75 135 45 120
-Line -13345367 false 60 112 60 142
+Rectangle -1 true false 14 186 33 195
+Rectangle -2674135 true false 64 115 118 128
+Rectangle -2674135 true false 85 95 98 147
 
 arrow
 true
@@ -1404,12 +1432,6 @@ false
 0
 Circle -7500403 true true 0 0 300
 
-circle 2
-false
-0
-Circle -7500403 true true 0 0 300
-Circle -16777216 true false 30 30 240
-
 clock
 true
 0
@@ -1420,12 +1442,21 @@ Circle -16777216 true false 135 135 30
 computer workstation
 false
 0
-Rectangle -7500403 true true 60 45 240 180
-Polygon -7500403 true true 90 180 105 195 135 195 135 210 165 210 165 195 195 195 210 180
-Rectangle -16777216 true false 75 60 225 165
-Rectangle -7500403 true true 45 210 255 255
+Polygon -1 true false 60 180 15 240 286 240 240 180
+Polygon -1 true false 62 180 62 59 69 49 229 48 238 57 239 180
+Rectangle -16777216 true false 66 56 231 178
 Rectangle -10899396 true false 249 223 237 217
-Line -16777216 false 60 225 120 225
+Rectangle -16777216 false false 75 186 226 191
+Rectangle -16777216 false false 61 195 238 201
+Rectangle -16777216 false false 50 205 246 213
+Polygon -16777216 false false 115 217 182 217 189 238 107 238
+Rectangle -1 false false 14 240 286 253
+Line -13840069 false 80 66 155 66
+Line -13840069 false 80 73 155 73
+Line -13840069 false 80 79 181 79
+Line -13840069 false 80 85 141 85
+Line -13840069 false 80 85 141 85
+Line -13840069 false 80 91 166 91
 
 cow
 false
@@ -1443,6 +1474,24 @@ dot
 false
 0
 Circle -7500403 true true 90 90 120
+
+employer
+false
+2
+Polygon -1184463 true false 114 79 183 80 176 24 149 16 118 28
+Polygon -1 true false 118 91 108 143 109 191 126 120 176 119 193 188 197 146 181 90
+Polygon -13345367 true false 173 183 127 184 112 244 102 294 132 267 152 254 180 257 197 265 195 250
+Line -16777216 false 148 143 150 196
+Rectangle -16777216 true false 118 188 184 200
+Circle -1 true false 152 143 9
+Circle -1 true false 152 166 9
+Rectangle -16777216 true false 179 164 183 186
+Polygon -955883 true true 180 89 179 118 173 160 195 194 150 194 150 119 180 89
+Polygon -955883 true true 120 89 121 101 127 157 105 194 150 194 150 119 120 89
+Polygon -7500403 true false 131 35 123 64 140 73 132 90 165 91 159 72 173 67 166 36
+Circle -16777216 false false 152 47 6
+Circle -16777216 false false 138 47 6
+Line -16777216 false 139 65 157 64
 
 exclamation
 false
@@ -1545,6 +1594,52 @@ Line -16777216 false 175 131 175 296
 Line -16777216 false 235 93 235 258
 Polygon -16777216 false false 112 52 112 66 127 51 162 64 170 87 185 85 192 71 180 54 155 39 127 36
 
+gp
+false
+2
+Polygon -2674135 true false 120 76 180 76 170 34 144 28 122 36
+Polygon -1 true false 118 90 75 209 105 194 126 119 176 118 195 194 225 209 181 89
+Polygon -13345367 true false 173 183 127 184 112 244 105 300 135 300 150 225 180 300 195 300 210 285
+Line -16777216 false 148 143 150 196
+Rectangle -16777216 true false 118 188 184 200
+Circle -1 true false 152 143 9
+Circle -1 true false 152 166 9
+Rectangle -16777216 true false 179 164 183 186
+Polygon -7500403 true false 133 39 123 64 140 73 137 92 162 93 159 72 173 67 161 38
+Circle -16777216 false false 138 47 6
+Line -16777216 false 139 64 156 64
+Polygon -1 true false 122 89 122 164 107 209 197 209 182 164 182 104
+Line -16777216 false 165 88 150 124
+Line -16777216 false 136 91 151 121
+Line -16777216 false 151 122 153 148
+Circle -16777216 false false 152 47 6
+Circle -2674135 false false 147 147 12
+Rectangle -2674135 true false 167 108 171 135
+Rectangle -2674135 true false 156 121 183 125
+
+hospital
+false
+15
+Polygon -1 true true 1 58 150 5 296 58
+Rectangle -1 true true -1 57 296 286
+Rectangle -16777216 false false 0 255 300 270
+Circle -1 true true 135 26 30
+Circle -16777216 false false 135 18 30
+Rectangle -16777216 false false -3 62 297 77
+Line -16777216 false 112 260 184 260
+Line -16777216 false 105 265 196 265
+Rectangle -2674135 true false 135 82 166 188
+Rectangle -2674135 true false 88 121 205 148
+Rectangle -16777216 false false 221 98 280 148
+Rectangle -16777216 false false 222 169 281 219
+Rectangle -16777216 false false 14 169 73 219
+Rectangle -16777216 false false 14 99 73 149
+Rectangle -16777216 false false 137 200 167 255
+Line -16777216 false 45 100 45 148
+Line -16777216 false 45 170 45 218
+Line -16777216 false 252 99 252 146
+Line -16777216 false 251 170 251 217
+
 house
 false
 0
@@ -1552,6 +1647,41 @@ Rectangle -7500403 true true 45 120 255 285
 Rectangle -16777216 true false 120 210 180 285
 Polygon -7500403 true true 15 120 150 15 285 120
 Line -16777216 false 30 120 270 120
+
+insurer
+true
+0
+Polygon -13345367 true false 22 130 290 130 261 239 157 277 54 255
+Circle -13345367 true false 1 1 300
+Circle -1 true false 30 8 240
+Circle -13345367 true false 26 82 72
+Circle -13345367 true false 87 81 72
+Circle -13345367 true false 146 82 72
+Circle -13345367 true false 205 83 72
+Circle -13345367 true false 183 47 14
+Polygon -13345367 true false 187 28 187 41 183 56 196 56 195 49
+Circle -13345367 true false 25 138 38
+Polygon -13345367 true false 24 130 282 120 269 228 169 280 71 256 25 192
+Rectangle -1 true false 150 3 156 192
+Circle -1 true false 88 155 68
+Circle -13345367 true false 96 164 54
+Polygon -13345367 true false 150 140 83 138 80 206 150 192
+
+lawyer
+false
+0
+Polygon -16777216 true false 296 299 244 242 54 239 2 300
+Circle -16777216 true false 98 94 32
+Circle -16777216 true false 168 93 34
+Polygon -1 true false 151 181 202 196 239 276 176 227 128 227 73 275 100 195
+Polygon -1 true false 151 165 70 202 234 203
+Polygon -1 true false 50 90 34 227 63 98 95 57 202 56 235 100 255 230 244 79 266 189 263 31 199 9 97 9 39 31 24 181
+Line -16777216 false 89 45 211 44
+Line -16777216 false 102 35 191 35
+Line -16777216 false 114 26 178 25
+Circle -1 true false 186 99 9
+Circle -1 true false 117 100 9
+Polygon -1 false false 49 151 65 237 122 284 182 287 236 240 242 152 226 62 206 47 86 48 53 89
 
 leaf
 false
@@ -1599,27 +1729,6 @@ Polygon -14835848 true false 180 226 195 226 270 196 255 196
 Polygon -13345367 true false 209 202 209 216 244 202 243 188
 Line -16777216 false 180 90 150 165
 Line -16777216 false 120 90 150 165
-
-person construction
-false
-0
-Rectangle -7500403 true true 123 76 176 95
-Polygon -1 true false 105 90 60 195 90 210 115 162 184 163 210 210 240 195 195 90
-Polygon -13345367 true false 180 195 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285
-Circle -7500403 true true 110 5 80
-Line -16777216 false 148 143 150 196
-Rectangle -16777216 true false 116 186 182 198
-Circle -1 true false 152 143 9
-Circle -1 true false 152 166 9
-Rectangle -16777216 true false 179 164 183 186
-Polygon -955883 true false 180 90 195 90 195 165 195 195 150 195 150 120 180 90
-Polygon -955883 true false 120 90 105 90 105 165 105 195 150 195 150 120 120 90
-Rectangle -16777216 true false 135 114 150 120
-Rectangle -16777216 true false 135 144 150 150
-Rectangle -16777216 true false 135 174 150 180
-Polygon -955883 true false 105 42 111 16 128 2 149 0 178 6 190 18 192 28 220 29 216 34 201 39 167 35
-Polygon -6459832 true false 54 253 54 238 219 73 227 78
-Polygon -16777216 true false 15 285 15 255 30 225 45 225 75 255 75 270 45 285
 
 person doctor
 false
@@ -1733,6 +1842,23 @@ Polygon -7500403 true true 165 180 165 210 225 180 255 120 210 135
 Polygon -7500403 true true 135 105 90 60 45 45 75 105 135 135
 Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
+
+pool
+false
+0
+Circle -1 true false 15 15 270
+Circle -13345367 true false 30 30 240
+Circle -1 true false 88 47 30
+Circle -1 true false 54 84 42
+Circle -1 true false 114 61 67
+Circle -1 true false 40 148 67
+Circle -1 true false 150 134 42
+Circle -1 true false 189 99 42
+Circle -1 true false 183 59 30
+Circle -1 true false 114 204 42
+Circle -1 true false 105 140 42
+Circle -1 true false 165 228 30
+Circle -1 true false 184 164 63
 
 square
 false
