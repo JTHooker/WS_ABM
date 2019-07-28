@@ -95,7 +95,7 @@ to setup
   create-OccRehabProviders 1 [ set shape "OR" set size 5 set label "Occ Rehab Provider"  set xcor 43.65 set ycor 33.52 set color yellow ]
   create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
   create-OccRehabResources 1 [ set shape "OR1" set color blue move-to one-of OccRehabProviders set Addcap 1 set CostofAddCap AddCap ]
-  ;;ask turtles [ create-links-with other turtles show label ]
+  ask turtles [ create-links-with other turtles show label set link-color white a]
   create-workers Population [ set shape one-of [ "person" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations
@@ -489,8 +489,8 @@ end
 GRAPHICS-WINDOW
 1388
 33
-2333
-979
+2049
+695
 -1
 -1
 12.804
@@ -1128,12 +1128,12 @@ SLIDER
 1490
 844
 1644
-878
+877
 Accept_Threshold
 Accept_Threshold
 0
 2
-1.0
+0.6
 .1
 1
 NIL
@@ -1192,7 +1192,7 @@ SLIDER
 912
 620
 1091
-655
+653
 Assessment_Capacity
 Assessment_Capacity
 0
@@ -1222,7 +1222,7 @@ SWITCH
 2260
 339
 2365
-374
+372
 SendORs
 SendORs
 1
@@ -1233,7 +1233,7 @@ SLIDER
 317
 735
 493
-770
+768
 PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
@@ -1248,7 +1248,7 @@ SLIDER
 58
 663
 231
-698
+696
 ORCapacity
 ORCapacity
 0
@@ -1263,7 +1263,7 @@ SLIDER
 58
 262
 231
-297
+295
 Emergency_Pres
 Emergency_Pres
 0
@@ -1278,7 +1278,7 @@ SLIDER
 58
 302
 230
-337
+335
 Emergency_to_Accepted
 Emergency_to_Accepted
 0
@@ -1293,7 +1293,7 @@ SLIDER
 59
 712
 232
-747
+745
 DiagNosisError
 DiagNosisError
 0
@@ -1303,23 +1303,6 @@ DiagNosisError
 1
 NIL
 HORIZONTAL
-
-BUTTON
-79
-777
-188
-811
-NIL
-Burn_Patches
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1881,21 +1864,27 @@ Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
 
 pool
-false
+true
 0
-Circle -1 true false 15 15 270
-Circle -13345367 true false 30 30 240
+Circle -1 true false 0 0 300
+Circle -13345367 true false 15 15 270
 Circle -1 true false 88 47 30
 Circle -1 true false 54 84 42
 Circle -1 true false 114 61 67
-Circle -1 true false 40 148 67
+Circle -1 true false 33 151 67
 Circle -1 true false 150 134 42
 Circle -1 true false 189 99 42
 Circle -1 true false 183 59 30
-Circle -1 true false 114 204 42
-Circle -1 true false 105 140 42
+Circle -1 true false 118 191 42
+Circle -1 true false 100 134 42
 Circle -1 true false 165 228 30
 Circle -1 true false 184 164 63
+Circle -1 true false 240 135 30
+Circle -1 true false 225 75 30
+Circle -1 true false 150 30 30
+Circle -1 true false 30 120 30
+Circle -1 true false 75 225 30
+Circle -1 true false 133 250 30
 
 square
 false
