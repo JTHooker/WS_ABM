@@ -1,5 +1,5 @@
 globals [ NoRecoverycount
-  DisputeCount]
+  DisputeCount TotalSystemCosts]
 
 
 breed [ VicPops VicPop ]
@@ -15,6 +15,7 @@ breed [ OccRehabProviders OccRehabProvider ]
 breed [ LodgeClaims LodgeClaim ]
 breed [ Workers Worker ]
 breed [ OccRehabResources OccRehabResource ]
+breed [ Advertisements Advertisement ]
 
 OccRehabResources-own [ Addcap costofAddcap ]
 
@@ -95,8 +96,10 @@ to setup
   create-OccRehabProviders 1 [ set shape "OR" set size 5 set label "Occ Rehab Provider"  set xcor 43.65 set ycor 33.52 set color yellow ]
   create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
   create-OccRehabResources 1 [ set shape "OR1" set color blue move-to one-of OccRehabProviders set Addcap 1 set CostofAddCap AddCap ]
-  ask turtles [ create-links-with other turtles show label set link-color white a]
-  create-workers Population [ set shape one-of [ "person" "person construction" "person business" "person farmer"] set state1 0 move-to one-of VicPops set color white set trust random-normal 80 3 set speed random-normal 1 .1 ]
+  ask turtles [ create-links-with other turtles ]
+  create-Advertisements 1 [ set shape "Advert" set xcor 25 set ycor 25 set size AdSpend ]
+  ask links [set color white ]
+  create-workers Population [ set shape one-of [ "Worker1" "Worker2"] set state1 0 move-to one-of VicPops set trust random-normal 80 3 set speed random-normal 1 .1 set size 2]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations
     set health random-normal 50 10 isClaimType set salary random-normal 55 10 set salary (salary ^ 1.2) ]
@@ -114,7 +117,8 @@ to isClaimType
 end
 
 to setup-image
-  import-drawing "wslogo.jpg"
+  import-drawing "wslogo.png"
+
 end
 
 
@@ -156,34 +160,31 @@ to go
     OverCapNew
     SocialEpi
     EngageExpectations
-    Colourme
     RemoveHealthyWorkers
     CountTreatmentCosts
     CountWageReplacementCosts
     ChangeHealth
     TimeOut
+    Changeshape
   ]
 
   ask OccRehabResources [ GoHelp ChangeAddcap changeshape ]
-
+  ask Advertisements [ changecolor ]
 
   ask Employer1s [ Recalculatereadiness ]
 
   ask turtles [
     set size (5 + sqrt count Workers in-radius 1 )
       ]
-  ask Workers [ set size 1 ]
+  ask Workers [ set size 2]
+  ask Advertisements [ set size AdSpend ]
   createClaimAccepteds
   countNoRecoverys
    ;; burnpatches
+  EstimateTotalSystemCosts
   if ticks = 10000 [ stop ]
   tick
 end
-
-to leaveWS
-  die
-end
-
 
 to capTrust
   if trust > 100 [ set trust Maxtrust ]
@@ -286,7 +287,7 @@ end
 
 to TestDispute
    if InSystem = 0 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here and ((100 - trust ) > 1000 )[ ;; so this send people who have a successful claim dispute back to the Claim Lodgement stage - they are not in the system yet
-    face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0 set trust (trust * .9) ]
+    face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0 set trust (trust * .9)  ]
     if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed set indispute 0 ]
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
 end
@@ -303,7 +304,7 @@ end
 
 to DisputeToClaimAccepted
   if InSystem = 1 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here [
-    face one-of ClaimAccepteds fd speed set GoingToClaimAccepted 1 set trust (trust * .9) set satisfaction satisfaction * .9 set CostsTreatment (CostsTreatment + one-of [ -1 0 ])]
+    face one-of ClaimAccepteds fd speed set GoingToClaimAccepted 1 set trust (trust * .9) set satisfaction satisfaction * .9 set CostsTreatment (CostsTreatment + one-of [ -1 0 ])  ]
 
   if GoingToClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds set InClaimAccepted 1 set GoingToClaimAccepted 0 set health (health * responsiveness) set indispute 0 ]]
 end
@@ -354,12 +355,12 @@ end
 to Disputesincare
 
  if ((100 - trust ) / 10 ) > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
-    face one-of Disputes fd speed set GoingtoDispute 1 ]
+    face one-of Disputes fd speed set GoingtoDispute 1 set color red ]
   if GoingtoDispute = 1 [ face one-of Disputes fd speed  if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .9 set trust trust * .5 ]]
 
   if ((100 - trust ) / 10 ) > random 100 and InTreatment = 1 and any? TreatmentCentres-here  [
-     face one-of Disputes fd speed  set GoingtoDispute 1  ]
-  if GoingtoDispute = 1 [ face one-of Disputes fd speed if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .9 set trust trust * .5 ]]
+     face one-of Disputes fd speed  set GoingtoDispute 1  set color red ]
+  if GoingtoDispute = 1 [ face one-of Disputes fd speed if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .9 set trust trust * .5  ]]
 end
 
 to CountNoRecoverys
@@ -385,7 +386,7 @@ end
 
 to EngageExpectations
   if goingtoLodgeClaim = 1 [ set timenow1 ticks ] ;; need this to record once and then forget about it
-  if any? LodgeClaims-here and ticks - timenow1 > (LodgeClaimexpectations + random Error_of_Estimate - random Error_of_Estimate) [ rememberevents set engaged true set color red ]  ;; OK, so now timmenow only starts at the point at which people go into the LodgeClaim
+  if any? LodgeClaims-here and ticks - timenow1 > (LodgeClaimexpectations + random Error_of_Estimate - random Error_of_Estimate) [ rememberevents set engaged true ]   ;; OK, so now timmenow only starts at the point at which people go into the LodgeClaim
 end
 
 to rememberevents
@@ -397,7 +398,7 @@ to rememberevents
     if any? GPs-here and memory = 1 [ set timenow ticks ]
 
   if ticks - timenow > memoryspan [ set memory 0 set trust trust ] ;; it needs to do nothing if memory = 0 here. Trust needs to go up if a good thing happens, that's all.
-      if memory = 0 [ set color white ]
+
 end
 
 to calculatetrustfactor
@@ -426,7 +427,7 @@ to resetinitial
 end
 
 to createClaimAccepteds
- create-Workers Injured_Workers [ set shape one-of [ "person" "GP"  "person business" "person farmer"] set state1 1 move-to one-of VicPops set color white set speed random-normal 1 .1
+ create-Workers (Injured_Workers * (1 - (AdSpend / 100))) [ set shape one-of [ "Worker1" "Worker2" ] set size 2 set state1 1 move-to one-of VicPops set speed random-normal 1 .1
     set trust random-normal 80 3 set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations set health random-normal 50 10 IsClaimType
     set salary random-normal 55 10 set salary (salary ^ 1.2) resettrust
@@ -443,10 +444,6 @@ to SocialEpi
   if any? other Workers-here with [ trust >  [ trust ] of myself ] [ set trust trust + 1 ]
 end
 
-to colourme
-  if satisfaction = 0  [ set color blue ]
-end
-
 to RemoveHealthyWorkers
   if InSystem = 0 and health > Claim_Threshold [ die ]
 end
@@ -459,9 +456,15 @@ to CountWageReplacementCosts
   if InSystem = 1 [ set CostsWageReplacement CostsWageReplacement + (Salary / 365 * .8 ) ]
 end
 
+to EstimateTotalSystemCosts
+  set TotalSystemCosts (sum [ CostsWageReplacement ] of workers + sum [ CostsTreatment ] of workers + AdSpend )
+end
+
 to timeout
-  if InSystem = 1 [ if ticks - entrytime > (max_claim_duration - 2) [ set size 20 set shape "star" set color yellow   ] ]
-  if InSystem = 1 [ if ticks - entrytime > max_claim_duration [ leaveWS ] ]
+  if InSystem = 1 and ticks - entrytime > max_claim_duration [ set size 20 set color yellow face one-of NoRecoverys set InSystem 2 fd speed set state1 0 set goingtoAcutecare 0 set InEmergency 0 set GoingtoTreatment 0 set Intreatment 0
+    set GoingtoClaimAccepted 0 set inClaimAccepted 0 set GoingtoRTW 0 set inRTW 0 set GoingtoVicPops 0 set goingtoEmployer1 0 set inEmployer1 0 set goingtoGP 0 set GoingtoLodgeClaim 0 set GoingtoAcuteCare 0  ]
+
+  if InSystem = 2 and ticks - entrytime > (max_claim_duration + 2 ) [ face one-of NoRecoverys set InSystem 2 fd speed if any? NoRecoverys in-radius 1 [ move-to one-of Norecoverys ]  if any? Norecoverys-here [ die ] ]
   set dynclaimtime  ( ticks - entrytime )
 end
 
@@ -484,6 +487,10 @@ end
 
 to changeshape
   ifelse remainder ticks 10 < 5 [ set shape "OR1" ] [ set shape "OR2" ]
+end
+
+to changecolor
+  set color (white + random 2 - random 2)
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -680,6 +687,7 @@ true
 PENS
 "Treatment Costs" 1.0 0 -5298144 true "" "plot sum [ CostsTreatment ] of workers with [ InSystem = 1 ] "
 "Wage Rep Costs" 1.0 0 -7500403 true "" "plot sum [ CostsWageReplacement ] of workers with [ Insystem = 1 ] "
+"Total System Costs" 1.0 0 -16777216 true "" "plot TotalSystemCosts"
 
 PLOT
 316
@@ -801,10 +809,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-504
-612
-677
-645
+383
+607
+556
+640
 InitialV
 InitialV
 0
@@ -1077,15 +1085,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-318
-650
-490
-683
+382
+647
+554
+680
 Claim_Threshold
 Claim_Threshold
 0
 100
-65.0
+67.0
 1
 1
 NIL
@@ -1100,7 +1108,7 @@ Injured_Workers
 Injured_Workers
 0
 100
-10.0
+20.0
 1
 1
 NIL
@@ -1125,15 +1133,15 @@ PENS
 "default" 1.0 0 -16777216 true "" "histogram [ salary ] of workers"
 
 SLIDER
-1490
-844
-1644
-877
+1498
+724
+1652
+757
 Accept_Threshold
 Accept_Threshold
 0
 2
-0.6
+0.5
 .1
 1
 NIL
@@ -1204,36 +1212,36 @@ NIL
 HORIZONTAL
 
 SLIDER
-316
-695
-491
-728
+380
+683
+555
+716
 Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-165.0
+129.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-2260
-339
-2365
-372
+1847
+725
+1952
+758
 SendORs
 SendORs
-1
+0
 1
 -1000
 
 SLIDER
-317
-735
-493
-768
+382
+723
+558
+756
 PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
@@ -1304,6 +1312,21 @@ DiagNosisError
 NIL
 HORIZONTAL
 
+SLIDER
+1664
+725
+1837
+759
+AdSpend
+AdSpend
+0
+30
+5.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 @#$#@#$#@
@@ -1313,6 +1336,29 @@ true
 Polygon -2674135 true false 150 5 40 250 150 105 260 250
 Rectangle -2674135 true false 90 180 225 180
 Rectangle -2674135 true false 89 143 209 173
+
+advert
+false
+15
+Circle -955883 true false -7 -12 331
+Polygon -1 true true 55 56 60 192 246 144 246 73
+Polygon -1 true true 62 64 242 78 243 140 66 180
+Polygon -16777216 true false 82 90 86 158 215 135 234 113 216 93
+Polygon -955883 true false 187 80 166 116 190 148 212 112
+Rectangle -16777216 true false 150 120 165 135
+Polygon -1 true true 98 104 92 104 109 140 117 116 126 138 135 104 129 104 125 124 114 102 109 124
+Polygon -16777216 true false 133 122 157 120 158 107 162 106 161 121 168 121 167 130 129 136
+Polygon -1 true true 135 122 158 121 160 107 164 106 163 121 170 121 169 130 131 136
+Polygon -16777216 true false 177 101 185 105 188 112 195 107 195 113 203 106 201 121 175 125
+Polygon -955883 true false 178 126 200 125 199 127 180 130
+Polygon -13791810 true false 90 13 154 -3 184 27 70 34
+Polygon -13791810 true false 54 39 205 35 231 66 44 49
+Polygon -13791810 true false 211 5 297 74 244 70 177 5
+Polygon -16777216 true false 66 284 304 167 316 207 275 261 227 298
+Polygon -16777216 true false 55 56 62 262 74 266 66 56
+Polygon -10899396 true false 49 270 85 272 85 239 80 265 77 236 70 268 68 256 65 266 60 246 56 265 53 254
+Polygon -16777216 true false 242 72 242 182 248 181 247 73
+Polygon -10899396 true false 233 185 253 189 253 160 254 182 244 161 244 185 242 173 239 183 234 163 230 182 236 171
 
 airplane
 true
@@ -1448,7 +1494,7 @@ Circle -16777216 true false 135 135 30
 computer workstation
 false
 0
-Circle -955883 true false -31 -31 361
+Circle -10899396 true false -31 -31 361
 Polygon -1 true false 60 180 15 240 286 240 240 180
 Polygon -1 true false 62 180 62 59 69 49 229 48 238 57 239 180
 Rectangle -16777216 true false 66 56 231 178
@@ -1579,6 +1625,7 @@ Polygon -10899396 true false 180 255 150 210 105 210 75 240 135 240
 garbage can
 false
 0
+Circle -16777216 true false -42 -42 384
 Polygon -16777216 false false 60 240 66 257 90 285 134 299 164 299 209 284 234 259 240 240
 Rectangle -7500403 true true 60 75 240 240
 Polygon -7500403 true true 60 238 66 256 90 283 135 298 165 298 210 283 235 256 240 238
@@ -1705,17 +1752,17 @@ Rectangle -16777216 false false 6 184 118 189
 
 or1
 false
-0
+15
 Circle -2674135 true false 96 96 108
-Circle -1 true false 108 108 85
+Circle -1 true true 108 108 85
 Polygon -2674135 true false 120 180 135 195 121 245 107 246 125 190 125 190
 Polygon -2674135 true false 181 182 166 197 180 247 194 248 176 192 176 192
 
 or2
 false
-0
+15
 Circle -2674135 true false 95 94 110
-Circle -1 true false 108 107 85
+Circle -1 true true 108 107 85
 Polygon -2674135 true false 130 197 148 197 149 258 129 258
 Polygon -2674135 true false 155 258 174 258 169 191 152 196
 
@@ -1969,6 +2016,22 @@ Line -7500403 true 216 40 79 269
 Line -7500403 true 40 84 269 221
 Line -7500403 true 40 216 269 79
 Line -7500403 true 84 40 221 269
+
+worker1
+true
+15
+Circle -2674135 true false 96 96 108
+Circle -1 true true 108 108 85
+Polygon -2674135 true false 120 180 135 195 121 245 107 246 125 190 125 190
+Polygon -2674135 true false 181 182 166 197 180 247 194 248 176 192 176 192
+
+worker2
+true
+15
+Circle -2674135 true false 95 94 110
+Circle -1 true true 108 107 85
+Polygon -2674135 true false 130 197 148 197 149 258 129 258
+Polygon -2674135 true false 155 258 174 258 169 191 152 196
 
 x
 false
