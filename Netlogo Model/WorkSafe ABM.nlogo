@@ -145,8 +145,6 @@ to go
     TreatmenttoEmployer
     DisputeToClaimAccepted
     ReturntoWork
-    BecomeNoRecovery
-    OccRehabReEnter
     EmployernotReady
     BecomeLodgeClaim
     EmployerfromGP
@@ -197,26 +195,26 @@ to initialise
 end
 
 to gpreferral ;; individuals emerging from the general population into GPs
-  if GP_referral_barrier < random 100 and state1 = 1 and any? VicPops-here  [
+  if GP_referral > random 100 and state1 = 1 and any? VicPops-here  [
     face one-of GPs fd speed set goingtoGP 1 set state1 0 ]
      if goingtoGP = 1 [ face one-of GPs fd speed ]
        if any? GPs in-radius 1 [ move-to one-of GPs set InGP 1 set goingtoGP 0 set state1 0 set CostsTreatment Coststreatment + .1 ]
 end
 
 to Emergency ;; individuals emerging from the general population into emergency areas of hospitals
-    if Emergency_Pres < random 100 and state1 = 1 and InEmergency = 0 and any? VicPops-here [
+    if Emergency_Pres > random 100 and state1 = 1 and InEmergency = 0 and any? VicPops-here [
       face one-of AcuteCares fd speed  set GoingtoAcuteCare 1 set State1 0 ]
        if GoingtoAcuteCare = 1 [ face one-of AcuteCares fd speed ]
         if any? AcuteCares in-radius 1 [ move-to one-of AcuteCares set InEmergency 1 set InGP 0 set GoingtoAcuteCare 0 set CostsTreatment Coststreatment + 1 ]
 end
 
 to BecomeLodgeClaim ;;
-     if Acute_Care_Barrier < random 100 and InEmergency = 1 and any? AcuteCares-here and health < Claim_Threshold [
+     if Emergency_Referral > random 100 and InEmergency = 1 and any? AcuteCares-here and health < Claim_Threshold [
     face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InEmergency 0 ]
    if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InEmergency 0 set GoingtoLodgeClaim 0  ]
 
-    if GP_Referral_Barrier < random 100 and InGP = 1 and any? GPs-here and health < Claim_Threshold [
+    if GP_Referral > random 100 and InGP = 1 and any? GPs-here and health < Claim_Threshold [
       face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InGP 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InGP 0 set GoingtoLodgeClaim 0  ]
@@ -227,7 +225,7 @@ to BecomeAcceptedClaim
   and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.9 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
   face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
 
-   if Label = "C" and InLodgeClaim = 1 and any? LodgeClaims-here
+  if Label = "C" and InLodgeClaim = 1 and any? LodgeClaims-here
   and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.6 .1 ) * (random-normal 0.8 .1 ) > Accept_Threshold [
   face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ]
 
@@ -245,10 +243,6 @@ to AccessTreatment
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health (health + ((100 - health) * .05 ) * Responsiveness )]
 
-if Emergency_to_Accepted > random 100 and InEmergency = 1 and any? AcuteCares-here [
-      face one-of ClaimAccepteds fd speed set GoingtoClaimAccepted 1 Set InEmergency 0 ]
-    if GoingtoClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed  ]
-      if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 set GoingtoCLaimAccepted 0 ]
 end
 
 to OverCapNew
@@ -371,20 +365,6 @@ end
 
 ;;need to combine Occrehab and Employer Readiness
 
-to OccRehabReEnter
-  ifelse InOccRehabProvider = 1 and any? OccRehabProviders-here and not any? OccrehabResources-here [
-    face one-of TreatmentCentres fd speed  set GoingtoTreatment 1 set inOccRehabProvider 0 ] [ BecomeNoRecovery ]
-   if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed ]
-    if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingtoTreatment 0 set inOccRehabProvider 0 ]
-end
-
-to BecomeNoRecovery
-  if InOccRehabProvider = 1 and any? OccRehabProviders-here and not any? OccRehabResources-here [
-     face one-of NoRecoverys fd speed set GoingtoNoRecovery 1 set inOccRehabProvider 0  ]
-   if GoingtoNoRecovery = 1 [ face one-of NoRecoverys fd speed ]
-    if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys set inOccRehabProvider 0 set InNoRecovery 1 die ]
-end
-
 to EngageExpectations
   if goingtoLodgeClaim = 1 [ set timenow1 ticks ] ;; need this to record once and then forget about it
   if any? LodgeClaims-here and ticks - timenow1 > (LodgeClaimexpectations + random Error_of_Estimate - random Error_of_Estimate) [ rememberevents set engaged true ]   ;; OK, so now timmenow only starts at the point at which people go into the LodgeClaim
@@ -458,14 +438,16 @@ to CountWageReplacementCosts
 end
 
 to EstimateTotalSystemCosts
-  set TotalSystemCosts (sum [ CostsWageReplacement ] of workers + sum [ CostsTreatment ] of workers + AdSpend )
+  set TotalSystemCosts (sum [ CostsWageReplacement ] of workers + sum [ CostsTreatment ] of workers + AdSpend * 10  )
 end
 
 to timeout
+  if any? Norecoverys-here [ die ]
+
   if InSystem = 1 and ticks - entrytime > max_claim_duration [ set size 20 set color yellow face one-of NoRecoverys set InSystem 2 fd speed set state1 0 set goingtoAcutecare 0 set InEmergency 0 set GoingtoTreatment 0 set Intreatment 0
     set GoingtoClaimAccepted 0 set inClaimAccepted 0 set GoingtoRTW 0 set inRTW 0 set GoingtoVicPops 0 set goingtoEmployer1 0 set inEmployer1 0 set goingtoGP 0 set GoingtoLodgeClaim 0 set GoingtoAcuteCare 0  ]
 
-  if InSystem = 2 and ticks - entrytime > (max_claim_duration + 2 ) [ face one-of NoRecoverys set InSystem 2 fd speed if any? NoRecoverys in-radius 1 [ move-to one-of Norecoverys ]  if any? Norecoverys-here [ die ] ]
+  if InSystem = 2 [ face one-of NoRecoverys set InSystem 2 fd speed if any? NoRecoverys in-radius 1 [ move-to one-of NoRecoverys ] ]
   set dynclaimtime  ( ticks - entrytime )
 end
 
@@ -495,13 +477,13 @@ to changecolor
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-1388
-33
-2049
-695
+335
+24
+1045
+736
 -1
 -1
-12.804
+10.9804
 1
 10
 1
@@ -556,10 +538,10 @@ NIL
 0
 
 MONITOR
-645
-356
-752
-401
+1660
+497
+1767
+542
 Total Workers
 count Workers * 10
 0
@@ -582,10 +564,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-645
-405
-711
-450
+1658
+544
+1724
+589
 With GP
 count Workers with [ inGP = 1 ] * 10
 0
@@ -593,10 +575,10 @@ count Workers with [ inGP = 1 ] * 10
 11
 
 PLOT
-312
-18
-670
-246
+1067
+25
+1484
+254
 Worker States
 Time
 Amount
@@ -615,10 +597,10 @@ PENS
 "In RTW Pool" 1.0 0 -11221820 true "" "plot count workers with [ InRTW = 1 ] + count workers with [ goingtoRTW = 1 ] "
 
 MONITOR
-775
-405
-866
-450
+1790
+545
+1881
+590
 New Patients
 count workers with [InClaimAccepted = 1] * 10
 0
@@ -626,10 +608,10 @@ count workers with [InClaimAccepted = 1] * 10
 11
 
 MONITOR
-756
-356
-866
-401
+1772
+497
+1882
+542
 Review Workers
 count workers with [InTreatment = 1 ] * 10
 0
@@ -671,9 +653,9 @@ NIL
 1
 
 PLOT
-315
+1068
 262
-641
+1486
 477
 Costs
 NIL
@@ -691,10 +673,10 @@ PENS
 "Total System Costs" 1.0 0 -16777216 true "" "plot TotalSystemCosts"
 
 PLOT
-316
-481
-639
-601
+1069
+487
+1392
+607
 Unresolved Disputes
 NIL
 NIL
@@ -709,27 +691,12 @@ PENS
 "Disputes" 1.0 0 -2674135 true "" "plot DisputeCount"
 
 SLIDER
-22
-179
-148
-212
-GP_Referral_Barrier
-GP_Referral_Barrier
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-152
-179
-284
-212
-Acute_Care_Barrier
-Acute_Care_Barrier
+63
+467
+232
+501
+GP_Referral
+GP_Referral
 0
 100
 50.0
@@ -739,10 +706,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-715
-405
-772
-450
+1730
+545
+1787
+590
 Lodged
 count workers with [ inLodgeClaim = 1 ] * 10
 0
@@ -750,25 +717,10 @@ count workers with [ inLodgeClaim = 1 ] * 10
 11
 
 SLIDER
-52
-338
-227
-371
-Employer_From_GP_Rate
-Employer_From_GP_Rate
-0
-100
-53.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-696
-649
-869
-682
+63
+580
+236
+613
 MemorySpan
 MemorySpan
 0
@@ -780,10 +732,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-695
-683
-868
-716
+62
+614
+235
+647
 MaxTrust
 MaxTrust
 0
@@ -795,10 +747,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-696
-716
-869
-749
+63
+647
+236
+680
 MinTrust
 MinTrust
 0
@@ -810,10 +762,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-383
-607
-556
-640
+62
+543
+235
+576
 InitialV
 InitialV
 0
@@ -825,10 +777,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-50
-499
-223
-532
+60
+303
+233
+336
 ExperienceSaliency
 ExperienceSaliency
 0
@@ -840,10 +792,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-52
-536
-225
-569
+60
+339
+233
+372
 ExpectationSaliency
 ExpectationSaliency
 0
@@ -872,10 +824,10 @@ NIL
 1
 
 MONITOR
-578
-179
-636
-224
+1397
+185
+1455
+230
 Trust
 Mean [ trust ] of workers with [ InSystem = 1 ]
 1
@@ -883,10 +835,10 @@ Mean [ trust ] of workers with [ InSystem = 1 ]
 11
 
 BUTTON
-998
-660
-1091
-694
+95
+797
+188
+831
 Day_Off
 \nif remainder ticks Processing_Capacity = 0 [ \nset Assessment_Capacity 0 ]\n\n\nif remainder ticks Processing_Capacity = 1 [ \nset Assessment_Capacity 100 ]\n
 T
@@ -900,10 +852,10 @@ NIL
 1
 
 BUTTON
-1095
-660
-1190
-694
+192
+797
+287
+831
 Day_Off_New
 if remainder ticks Processing_Capacity = 0 [ \nset Treatment_Capacity 0 ]\n\nif remainder ticks Processing_Capacity = 1 [ \nset Treatment_Capacity 1000 ]
 T
@@ -917,10 +869,10 @@ NIL
 1
 
 SLIDER
-696
-752
-868
-785
+63
+683
+235
+716
 OverBookingRate
 OverBookingRate
 0
@@ -931,32 +883,11 @@ OverBookingRate
 NIL
 HORIZONTAL
 
-TEXTBOX
-84
-233
-247
-255
-No Barrier to High Barrier
-14
-0.0
-1
-
-MONITOR
-876
-358
-1026
-403
-Trust of Accepted Claims
-mean [ trust ] of workers with [ InSystem = 1 ]
-1
-1
-11
-
 PLOT
-688
-195
-1328
-345
+1283
+617
+1923
+767
 Trust histogram
 NIL
 NIL
@@ -973,40 +904,40 @@ PENS
 "Satisfaction" 1.0 0 -14439633 true "" "histogram [ Satisfaction ] of workers"
 
 SLIDER
-53
-576
-226
-609
+62
+380
+235
+413
 ManageExpectations
 ManageExpectations
 0
 50
-30.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-53
-616
-228
-649
+62
+420
+237
+453
 Error_of_Estimate
 Error_of_Estimate
 0
 50
-9.0
+10.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-649
-479
-866
-603
+1403
+485
+1620
+609
 Association
 NIL
 NIL
@@ -1021,10 +952,10 @@ PENS
 "Association" 1.0 0 -16777216 true "" " plot mean [ newassociationstrength * 10 ] of workers "
 
 PLOT
-686
-22
-1325
-185
+1490
+263
+1925
+477
 Overall Trust
 NIL
 NIL
@@ -1041,60 +972,45 @@ PENS
 "Mean Health" 1.0 0 -14070903 true "" "if ticks > 0 [ plot mean [ health ] of workers with [ insystem = 1 ] ] "
 
 SLIDER
-50
-418
-230
-451
-Dispute_to_General
-Dispute_to_General
-0
-100
-25.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-50
-455
-229
-488
+424
+745
+581
+779
 Success_Dispute_%
 Success_Dispute_%
 0
 100
-0.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1006
-700
-1178
-733
+103
+837
+275
+870
 Processing_Capacity
 Processing_Capacity
 0
 100
-100.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-382
-647
-554
-680
+424
+789
+583
+823
 Claim_Threshold
 Claim_Threshold
 0
 100
-67.0
+54.0
 1
 1
 NIL
@@ -1108,18 +1024,18 @@ SLIDER
 Injured_Workers
 Injured_Workers
 0
-100
-20.0
+30
+10.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-1033
-358
-1233
-508
+1068
+618
+1268
+768
 Salary
 NIL
 NIL
@@ -1134,42 +1050,25 @@ PENS
 "default" 1.0 0 -16777216 true "" "histogram [ salary ] of workers"
 
 SLIDER
-1498
-724
-1652
-757
+424
+827
+583
+861
 Accept_Threshold
 Accept_Threshold
 0
 2
-0.5
+0.2
 .1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-1806
-1016
-1952
-1049
-System Performance
-ask patches [ set pcolor black ] 
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-878
-408
-1027
-448
+67
+177
+216
+217
 Mass-Incident
 create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
 NIL
@@ -1183,10 +1082,10 @@ NIL
 1
 
 SLIDER
-1096
-620
-1254
-653
+193
+757
+351
+790
 Treatment_Capacity
 Treatment_Capacity
 0
@@ -1198,40 +1097,40 @@ NIL
 HORIZONTAL
 
 SLIDER
-912
-620
-1091
-653
+9
+757
+188
+790
 Assessment_Capacity
 Assessment_Capacity
 0
 100
-52.0
+100.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-380
-683
-555
-716
+590
+825
+763
+859
 Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-129.0
+140.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-1847
-725
-1952
-758
+773
+787
+947
+821
 SendORs
 SendORs
 1
@@ -1239,10 +1138,10 @@ SendORs
 -1000
 
 SLIDER
-382
-723
-558
-756
+770
+825
+946
+858
 PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
@@ -1254,15 +1153,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-58
-663
-231
-696
+592
+747
+765
+780
 ORCapacity
 ORCapacity
 0
 2
-0.0
+1.0
 .01
 1
 NIL
@@ -1277,47 +1176,32 @@ Emergency_Pres
 Emergency_Pres
 0
 100
-50.0
+70.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-58
-302
-230
-335
-Emergency_to_Accepted
-Emergency_to_Accepted
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-59
-712
-232
-745
+772
+748
+945
+781
 DiagNosisError
 DiagNosisError
 0
 20
-0.0
+3.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-1664
-725
-1837
-759
+590
+787
+763
+821
 AdSpend
 AdSpend
 0
@@ -1327,6 +1211,39 @@ AdSpend
 1
 NIL
 HORIZONTAL
+
+SLIDER
+63
+504
+232
+538
+Emergency_Referral
+Emergency_Referral
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1493
+25
+1933
+253
+TimeOut Clients
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count workers with [ Insystem = 2 ] "
 
 @#$#@#$#@
 ## WHAT IS IT?
