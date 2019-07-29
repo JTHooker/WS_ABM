@@ -102,11 +102,12 @@ to setup
   ask turtles [ create-links-with other turtles ]
   create-Advertisements 1 [ set shape "Advert" set xcor 25 set ycor 25 Set size 5 ]
   ask links [set color white ]
-  create-workers Population [ set shape one-of [ "Worker1" "Worker2"] set state1 0 move-to one-of VicPops set trust random-normal 80 3 set speed random-normal 1 .1 set size 2]
+  create-workers 10 [ set shape one-of [ "Worker1" "Worker2"] set state1 0 move-to one-of VicPops set trust random-normal 80 3 set speed random-normal 1 .1 set size 2]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations
     set health random-normal 50 10 isClaimType set salary random-normal 55 10 set salary (salary ^ 1.2) ]
   setup-image
+  set Injured_workers 10
   reset-ticks
 end
 
@@ -328,7 +329,7 @@ end
 to ReturntoWork ;;
   if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
   any? Employer1s-here [
-    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment CostsTreatment + 1 set PartialRTW 1 ]
+    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment (CostsTreatment + OccRehabMultiplier ) set PartialRTW 1 ]
 
   if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) ) < Claim_Threshold and InEmployer1 = 1 and
   any? Employer1s-here and Insystem = 1 [
@@ -550,21 +551,6 @@ count Workers * 10
 0
 1
 11
-
-SLIDER
-19
-20
-166
-53
-Population
-Population
-0
-500
-0.0
-10
-1
-NIL
-HORIZONTAL
 
 MONITOR
 1658
@@ -838,10 +824,10 @@ Mean [ trust ] of workers with [ InSystem = 1 ]
 11
 
 BUTTON
-95
-797
-188
-831
+87
+818
+180
+852
 Day_Off
 \nif remainder ticks Processing_Capacity = 0 [ \nset Assessment_Capacity 0 ]\n\n\nif remainder ticks Processing_Capacity = 1 [ \nset Assessment_Capacity 100 ]\n
 T
@@ -855,10 +841,10 @@ NIL
 1
 
 BUTTON
-192
-797
-287
-831
+183
+818
+278
+852
 Day_Off_New
 if remainder ticks Processing_Capacity = 0 [ \nset Treatment_Capacity 0 ]\n\nif remainder ticks Processing_Capacity = 1 [ \nset Treatment_Capacity 1000 ]
 T
@@ -952,7 +938,7 @@ true
 false
 "" ""
 PENS
-"Association" 1.0 0 -16777216 true "" " plot mean [ newassociationstrength * 10 ] of workers "
+"Association" 1.0 0 -16777216 true "" " if ticks > 0 [ plot mean [ newassociationstrength * 10 ] of workers ]"
 
 PLOT
 1490
@@ -968,7 +954,7 @@ NIL
 100.0
 true
 true
-"" ""
+"if ticks = 1 [ clear-plot ] " ""
 PENS
 "Mean Trust" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers with [ insystem = 1 ] ]"
 "Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers with [ insystem = 1 ] ] "
@@ -983,17 +969,17 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-50.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-103
-837
-275
-870
+94
+858
+266
+891
 Processing_Capacity
 Processing_Capacity
 0
@@ -1020,10 +1006,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-18
-58
-166
-91
+19
+23
+167
+56
 Injured_Workers
 Injured_Workers
 0
@@ -1061,7 +1047,7 @@ Accept_Threshold
 Accept_Threshold
 0
 2
-0.2
+0.4
 .1
 1
 NIL
@@ -1085,10 +1071,10 @@ NIL
 1
 
 SLIDER
-193
-757
-351
-790
+184
+778
+342
+811
 Treatment_Capacity
 Treatment_Capacity
 0
@@ -1100,10 +1086,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-9
-757
-188
-790
+0
+778
+179
+811
 Assessment_Capacity
 Assessment_Capacity
 0
@@ -1123,7 +1109,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-165.0
+120.0
 1
 1
 NIL
@@ -1136,7 +1122,7 @@ SWITCH
 821
 SendORs
 SendORs
-1
+0
 1
 -1000
 
@@ -1164,7 +1150,7 @@ ORCapacity
 ORCapacity
 0
 2
-1.0
+1.27
 .01
 1
 NIL
@@ -1250,6 +1236,38 @@ PENS
 "Partial RTW" 1.0 0 -955883 true "" "plot count workers with [ PartialRTW = 1 ] "
 "Full RTW" 1.0 0 -13840069 true "" "plot count workers with [ FullRTW = 1 ] "
 "Failed RTW" 1.0 0 -2674135 true "" "plot count workers with [ FailedRTW = 1 ] "
+
+BUTTON
+19
+62
+168
+96
+Random Injuries
+if remainder ticks 50 = 1 [ set Injured_Workers Injured_Workers + random 2 - random 2 ] 
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+62
+722
+235
+756
+OccRehabMultiplier
+OccRehabMultiplier
+0
+50
+10.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

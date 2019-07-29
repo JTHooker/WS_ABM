@@ -102,11 +102,12 @@ to setup
   ask turtles [ create-links-with other turtles ]
   create-Advertisements 1 [ set shape "Advert" set xcor 25 set ycor 25 Set size 5 ]
   ask links [set color white ]
-  create-workers Population [ set shape one-of [ "Worker1" "Worker2"] set state1 0 move-to one-of VicPops set trust random-normal 80 3 set speed random-normal 1 .1 set size 2]
+  create-workers 10 [ set shape one-of [ "Worker1" "Worker2"] set state1 0 move-to one-of VicPops set trust random-normal 80 3 set speed random-normal 1 .1 set size 2]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
     set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations
     set health random-normal 50 10 isClaimType set salary random-normal 55 10 set salary (salary ^ 1.2) ]
   setup-image
+  set Injured_workers 10
   reset-ticks
 end
 
@@ -328,10 +329,10 @@ end
 to ReturntoWork ;;
   if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
   any? Employer1s-here [
-    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment CostsTreatment + 1 set PartialRTW 1 ]
+    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment (CostsTreatment + (random OccRehabM ) set PartialRTW 1 ]
 
   if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) ) < Claim_Threshold and InEmployer1 = 1 and
-  any? Employer1s-here [
+  any? Employer1s-here and Insystem = 1 [
     face one-of TreatmentCentres fd speed set GoingtoTreatment 1 set InEmployer1 0 set salary (salary * ( health / Claim_Threshold )) set FailedRTW 1 set PartialRTW 0 set FullRTW 0 ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 set InEmployer1 0 set GoingtoTreatment 0 ]]
 end
@@ -550,21 +551,6 @@ count Workers * 10
 0
 1
 11
-
-SLIDER
-19
-20
-166
-53
-Population
-Population
-0
-500
-0.0
-10
-1
-NIL
-HORIZONTAL
 
 MONITOR
 1658
@@ -952,7 +938,7 @@ true
 false
 "" ""
 PENS
-"Association" 1.0 0 -16777216 true "" " plot mean [ newassociationstrength * 10 ] of workers "
+"Association" 1.0 0 -16777216 true "" " if ticks > 0 [ plot mean [ newassociationstrength * 10 ] of workers ]"
 
 PLOT
 1490
@@ -968,7 +954,7 @@ NIL
 100.0
 true
 true
-"" ""
+"if ticks = 1 [ clear-plot ] " ""
 PENS
 "Mean Trust" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers with [ insystem = 1 ] ]"
 "Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers with [ insystem = 1 ] ] "
@@ -1020,10 +1006,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-18
-58
-166
-91
+19
+23
+167
+56
 Injured_Workers
 Injured_Workers
 0
@@ -1136,7 +1122,7 @@ SWITCH
 821
 SendORs
 SendORs
-1
+0
 1
 -1000
 
@@ -1164,7 +1150,7 @@ ORCapacity
 ORCapacity
 0
 2
-1.0
+1.27
 .01
 1
 NIL
@@ -1251,6 +1237,38 @@ PENS
 "Full RTW" 1.0 0 -13840069 true "" "plot count workers with [ FullRTW = 1 ] "
 "Failed RTW" 1.0 0 -2674135 true "" "plot count workers with [ FailedRTW = 1 ] "
 
+BUTTON
+19
+62
+168
+96
+Random Injuries
+if remainder ticks 50 = 1 [ set Injured_Workers Injured_Workers + random 2 - random 2 ] 
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+1074
+777
+1247
+811
+OccRehabMultiplier
+OccRehabMultiplier
+0
+50
+10.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 @#$#@#$#@
@@ -1336,18 +1354,28 @@ Line -7500403 true 150 100 220 30
 building
 false
 0
-Circle -7500403 true true -21 -21 342
-Polygon -13345367 true false 53 263 110 24 194 27 245 263
-Polygon -11221820 true false 110 24 64 82 31 211 55 263
+Circle -7500403 true true -20 -17 342
+Polygon -13345367 true false 58 287 113 5 186 6 250 287
+Polygon -11221820 true false 112 7 70 76 35 235 59 287
 Polygon -13345367 false false 84 187 89 186 82 220
 Polygon -11221820 true false 89 193 83 219 114 219 113 193
-Polygon -11221820 true false 173 38 173 60 189 60 186 38
 Polygon -11221820 true false 160 69 160 91 178 92 174 70
 Polygon -11221820 true false 106 110 100 136 122 137 122 110
 Polygon -11221820 true false 185 161 184 187 212 187 207 162
 Polygon -16777216 true false 137 215 122 263 179 263 169 215
-Polygon -13345367 true false 65 91 61 111 72 105 76 83
-Polygon -13345367 true false 61 163 56 180 66 192 76 155
+Polygon -13345367 true false 66 163 61 180 71 192 81 155
+Polygon -16777216 true false 186 159 191 180 212 184 208 160
+Polygon -11221820 true false 185 161 184 187 212 187 207 162
+Polygon -16777216 true false 92 191 91 213 117 218 116 190
+Polygon -11221820 true false 91 192 85 218 116 218 115 192
+Polygon -16777216 true false 109 108 109 129 123 135 124 108
+Polygon -11221820 true false 106 110 100 136 122 137 122 110
+Polygon -16777216 true false 162 68 163 87 178 89 175 68
+Polygon -11221820 true false 160 69 160 91 178 92 174 70
+Polygon -16777216 true false 165 17 166 36 181 38 178 17
+Polygon -11221820 true false 164 18 164 40 180 40 177 18
+Polygon -16777216 true false 80 92 72 99 65 118 70 96
+Polygon -13345367 true false 69 99 65 119 76 113 80 91
 
 building institution
 false
