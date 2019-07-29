@@ -97,7 +97,7 @@ to setup
   create-VicPops 1 [ set shape "Factory" set xcor 25 set ycor 25 set size 5 set label "General Population" set xcor 25 set ycor 45.5 set color white ]
   create-OccRehabResources 1 [ set shape "OR1" set color blue move-to one-of OccRehabProviders set Addcap 1 set CostofAddCap AddCap ]
   ask turtles [ create-links-with other turtles ]
-  create-Advertisements 1 [ set shape "Advert" set xcor 25 set ycor 25 set size AdSpend ]
+  create-Advertisements 1 [ set shape "Advert" set xcor 25 set ycor 25 Set size 5 ]
   ask links [set color white ]
   create-workers Population [ set shape one-of [ "Worker1" "Worker2"] set state1 0 move-to one-of VicPops set trust random-normal 80 3 set speed random-normal 1 .1 set size 2]
   ask workers [ set satisfaction random-normal 70 5 set responsiveness random-normal 1 .01 resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV
@@ -119,6 +119,7 @@ end
 to setup-image
   import-drawing "wslogo.png"
   set Adspend 5
+  set SendORs false
 end
 
 
@@ -1233,7 +1234,7 @@ SWITCH
 758
 SendORs
 SendORs
-0
+1
 1
 -1000
 
