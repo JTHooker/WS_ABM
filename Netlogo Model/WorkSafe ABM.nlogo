@@ -32,6 +32,9 @@ Workers-own ; Attributes that individual Workers have or are in at any stage
   InEmployer1
   InRTW
   InLodgeClaim
+  PartialRTW
+  FullRTW
+  FailedRTW
 
   GoingtoGP
   GoingtoAcuteCare
@@ -169,6 +172,7 @@ to go
 
   ask OccRehabResources [ GoHelp ChangeAddcap changeshape ]
   ask Advertisements [ changecolor ]
+  ask OccRehabResources [ changecolor ]
 
   ask Employer1s [ Recalculatereadiness ]
 
@@ -242,7 +246,6 @@ to AccessTreatment
       face one-of TreatmentCentres fd speed  set Goingtotreatment 1 Set InClaimAccepted 0  ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health (health + ((100 - health) * .05 ) * Responsiveness )]
-
 end
 
 to OverCapNew
@@ -308,13 +311,13 @@ end
 
 to EmployernotReady ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
   if [ readiness ] of one-of Employer1s > 1 and any? Employer1s-here [
-      face one-of RTWs fd speed  set GoingtoRTW 1 Set InRTW 0 ]
+      face one-of RTWs fd speed  set GoingtoRTW 1 Set InRTW 0  set FullRTW 1 ]
     if GoingtoRTW = 1 [ face one-of RTWs fd speed  ]
-      if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 Set InEmployer1 0 set GoingtoRTW 0 ]
+      if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 Set InEmployer1 0 set GoingtoRTW 0 set fullRTW 1 ]
 
   ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
   if Trust > random 100 and InRTW = 1 and any? RTWs-here [
-      face one-of VicPops fd speed  set GoingtoVicPops 1 Set InRTW 0 ]
+      face one-of VicPops fd speed  set GoingtoVicPops 1 Set InRTW 0 set FullRTW 1 ]
     if GoingtoVicPops = 1 [ face one-of VicPops fd speed  ]
       if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
 end
@@ -323,13 +326,13 @@ end
 ;;;;;****************************************************************           **************                  ************************
 
 to ReturntoWork ;;
-  if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s - PromoteRecoveryAtWork ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
+  if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
   any? Employer1s-here [
-    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment CostsTreatment + 1 ]
+    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment CostsTreatment + 1 set PartialRTW 1 ]
 
-  if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s - PromoteRecoveryAtWork ) ) > Claim_Threshold and InEmployer1 = 1 and
-  any? Employer1s-here [
-    face one-of TreatmentCentres fd speed set GoingtoTreatment 1 set InEmployer1 0 set salary (salary * ( health / Claim_Threshold ))]
+  if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) ) < Claim_Threshold and InEmployer1 = 1 and
+  any? Employer1s-here and Insystem = 1 [
+    face one-of TreatmentCentres fd speed set GoingtoTreatment 1 set InEmployer1 0 set salary (salary * ( health / Claim_Threshold )) set FailedRTW 1 set PartialRTW 0 set FullRTW 0 ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 set InEmployer1 0 set GoingtoTreatment 0 ]]
 end
 
@@ -465,7 +468,7 @@ to ChangeAddcap
 end
 
 To Recalculatereadiness
-  set readiness random-normal 1 .1
+  set readiness random-normal (1 + (Adspend / 300 )) .1
 end
 
 to changeshape
@@ -1120,7 +1123,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-140.0
+165.0
 1
 1
 NIL
@@ -1232,7 +1235,7 @@ PLOT
 25
 1933
 253
-TimeOut Clients
+RTW Outcomes
 NIL
 NIL
 0.0
@@ -1240,10 +1243,13 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count workers with [ Insystem = 2 ] "
+"Termination of Benefits" 1.0 0 -16777216 true "" "plot count workers with [ Insystem = 2 ] "
+"Partial RTW" 1.0 0 -955883 true "" "plot count workers with [ PartialRTW = 1 ] "
+"Full RTW" 1.0 0 -13840069 true "" "plot count workers with [ FullRTW = 1 ] "
+"Failed RTW" 1.0 0 -2674135 true "" "plot count workers with [ FailedRTW = 1 ] "
 
 @#$#@#$#@
 ## WHAT IS IT?
