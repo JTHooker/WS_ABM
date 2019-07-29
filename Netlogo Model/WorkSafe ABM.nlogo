@@ -168,7 +168,7 @@ to go
     CountWageReplacementCosts
     ChangeHealth
     TimeOut
-    Changeshape
+    Changeshapeworkers
   ]
 
   ask OccRehabResources [ GoHelp ChangeAddcap changeshape ]
@@ -476,6 +476,10 @@ to changeshape
   ifelse remainder ticks 10 < 5 [ set shape "OR1" ] [ set shape "OR2" ]
 end
 
+to changeshapeworkers
+ ifelse remainder dynclaimtime 10 < 5 [ set shape "OR1" ] [ set shape "OR2" ]
+end
+
 to changecolor
   set color (white + random 2 - random 2)
 end
@@ -483,8 +487,8 @@ end
 GRAPHICS-WINDOW
 335
 24
-1045
-736
+903
+593
 -1
 -1
 10.9804
@@ -508,10 +512,10 @@ ticks
 30.0
 
 BUTTON
-22
-119
-87
-152
+27
+105
+92
+138
 setup
 setup
 NIL
@@ -525,10 +529,10 @@ NIL
 1
 
 BUTTON
-107
-120
-172
-153
+112
+105
+177
+138
 go
 go
 T
@@ -542,10 +546,10 @@ NIL
 0
 
 MONITOR
-1660
-497
-1767
-542
+1574
+464
+1681
+509
 Total Workers
 count Workers * 10
 0
@@ -553,10 +557,10 @@ count Workers * 10
 11
 
 MONITOR
-1658
-544
-1724
-589
+1574
+513
+1640
+558
 With GP
 count Workers with [ inGP = 1 ] * 10
 0
@@ -564,10 +568,10 @@ count Workers with [ inGP = 1 ] * 10
 11
 
 PLOT
-1067
-25
-1484
-254
+942
+13
+1359
+242
 Worker States
 Time
 Amount
@@ -586,10 +590,10 @@ PENS
 "In RTW Pool" 1.0 0 -11221820 true "" "plot count workers with [ InRTW = 1 ] + count workers with [ goingtoRTW = 1 ] "
 
 MONITOR
-1790
-545
-1881
-590
+1705
+513
+1796
+558
 New Patients
 count workers with [InClaimAccepted = 1] * 10
 0
@@ -597,10 +601,10 @@ count workers with [InClaimAccepted = 1] * 10
 11
 
 MONITOR
-1772
-497
-1882
-542
+1687
+464
+1797
+509
 Review Workers
 count workers with [InTreatment = 1 ] * 10
 0
@@ -642,10 +646,10 @@ NIL
 1
 
 PLOT
-1068
-262
-1486
-477
+943
+250
+1362
+443
 Costs
 NIL
 NIL
@@ -662,10 +666,10 @@ PENS
 "Total System Costs" 1.0 0 -16777216 true "" "plot TotalSystemCosts"
 
 PLOT
-1069
-487
-1392
-607
+940
+450
+1263
+570
 Unresolved Disputes
 NIL
 NIL
@@ -680,10 +684,10 @@ PENS
 "Disputes" 1.0 0 -2674135 true "" "plot DisputeCount"
 
 SLIDER
-63
-467
-232
-501
+67
+414
+241
+448
 GP_Referral
 GP_Referral
 0
@@ -695,10 +699,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-1730
-545
-1787
-590
+1645
+513
+1702
+558
 Lodged
 count workers with [ inLodgeClaim = 1 ] * 10
 0
@@ -706,25 +710,25 @@ count workers with [ inLodgeClaim = 1 ] * 10
 11
 
 SLIDER
-63
-580
-236
-613
+67
+529
+240
+562
 MemorySpan
 MemorySpan
 0
 365
-53.0
+168.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-62
-614
-235
-647
+963
+658
+1138
+692
 MaxTrust
 MaxTrust
 0
@@ -736,10 +740,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-63
-647
-236
-680
+963
+695
+1140
+729
 MinTrust
 MinTrust
 0
@@ -751,10 +755,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-62
-543
-235
-576
+67
+492
+240
+525
 InitialV
 InitialV
 0
@@ -766,10 +770,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-60
-303
-233
-336
+65
+262
+238
+295
 ExperienceSaliency
 ExperienceSaliency
 0
@@ -781,10 +785,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-60
-339
-233
-372
+65
+298
+238
+331
 ExpectationSaliency
 ExpectationSaliency
 0
@@ -796,10 +800,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-193
-119
-273
-153
+198
+105
+278
+139
 Go Once
 Go
 NIL
@@ -813,10 +817,10 @@ NIL
 1
 
 MONITOR
-1397
-185
-1455
-230
+1272
+173
+1330
+218
 Trust
 Mean [ trust ] of workers with [ InSystem = 1 ]
 1
@@ -824,10 +828,10 @@ Mean [ trust ] of workers with [ InSystem = 1 ]
 11
 
 BUTTON
-87
-818
-180
-852
+72
+643
+165
+677
 Day_Off
 \nif remainder ticks Processing_Capacity = 0 [ \nset Assessment_Capacity 0 ]\n\n\nif remainder ticks Processing_Capacity = 1 [ \nset Assessment_Capacity 100 ]\n
 T
@@ -841,10 +845,10 @@ NIL
 1
 
 BUTTON
-183
-818
-278
-852
+168
+643
+263
+677
 Day_Off_New
 if remainder ticks Processing_Capacity = 0 [ \nset Treatment_Capacity 0 ]\n\nif remainder ticks Processing_Capacity = 1 [ \nset Treatment_Capacity 1000 ]
 T
@@ -857,26 +861,11 @@ NIL
 NIL
 1
 
-SLIDER
-63
-683
-235
-716
-OverBookingRate
-OverBookingRate
-0
-2
-1.0
-.01
-1
-NIL
-HORIZONTAL
-
 PLOT
-1283
-617
-1923
-767
+1403
+580
+1795
+730
 Trust histogram
 NIL
 NIL
@@ -893,10 +882,10 @@ PENS
 "Satisfaction" 1.0 0 -14439633 true "" "histogram [ Satisfaction ] of workers"
 
 SLIDER
-62
-380
-235
-413
+67
+337
+239
+371
 ManageExpectations
 ManageExpectations
 0
@@ -908,10 +897,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-62
-420
-237
-453
+67
+377
+240
+411
 Error_of_Estimate
 Error_of_Estimate
 0
@@ -923,10 +912,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1403
-485
-1620
-609
+1274
+448
+1564
+573
 Association
 NIL
 NIL
@@ -941,10 +930,10 @@ PENS
 "Association" 1.0 0 -16777216 true "" " if ticks > 0 [ plot mean [ newassociationstrength * 10 ] of workers ]"
 
 PLOT
-1490
-263
-1925
-477
+1364
+252
+1799
+444
 Overall Trust
 NIL
 NIL
@@ -961,25 +950,25 @@ PENS
 "Mean Health" 1.0 0 -14070903 true "" "if ticks > 0 [ plot mean [ health ] of workers with [ insystem = 1 ] ] "
 
 SLIDER
-424
-745
-581
-779
+362
+604
+519
+637
 Success_Dispute_%
 Success_Dispute_%
 0
 100
-20.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-94
-858
-266
-891
+79
+683
+251
+716
 Processing_Capacity
 Processing_Capacity
 0
@@ -991,15 +980,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-424
-789
-583
-823
+360
+644
+519
+677
 Claim_Threshold
 Claim_Threshold
 0
 100
-80.0
+65.0
 1
 1
 NIL
@@ -1021,10 +1010,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1068
-618
-1268
-768
+1193
+580
+1393
+730
 Salary
 NIL
 NIL
@@ -1039,25 +1028,25 @@ PENS
 "default" 1.0 0 -16777216 true "" "histogram [ salary ] of workers"
 
 SLIDER
-424
-827
-583
-861
+362
+683
+521
+716
 Accept_Threshold
 Accept_Threshold
 0
 2
-0.4
+0.3
 .1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-67
-177
-216
-217
+73
+152
+222
+192
 Mass-Incident
 create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
 NIL
@@ -1071,10 +1060,10 @@ NIL
 1
 
 SLIDER
-184
-778
-342
-811
+169
+603
+327
+636
 Treatment_Capacity
 Treatment_Capacity
 0
@@ -1087,9 +1076,9 @@ HORIZONTAL
 
 SLIDER
 0
-778
-179
-811
+603
+165
+637
 Assessment_Capacity
 Assessment_Capacity
 0
@@ -1101,25 +1090,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-590
-825
-763
-859
+527
+682
+700
+715
 Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-120.0
+165.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-773
-787
-947
-821
+710
+644
+884
+677
 SendORs
 SendORs
 1
@@ -1127,10 +1116,10 @@ SendORs
 -1000
 
 SLIDER
-770
-825
-946
-858
+709
+682
+886
+716
 PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
@@ -1142,40 +1131,40 @@ NIL
 HORIZONTAL
 
 SLIDER
-592
-747
-765
-780
+529
+604
+702
+637
 ORCapacity
 ORCapacity
 0
 2
-1.25
+1.0
 .01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-58
-262
-231
-295
+64
+220
+237
+253
 Emergency_Pres
 Emergency_Pres
 0
 100
-70.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-772
-748
-945
-781
+709
+605
+886
+639
 DiagNosisError
 DiagNosisError
 0
@@ -1187,10 +1176,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-590
-787
-763
-821
+527
+644
+700
+677
 AdSpend
 AdSpend
 0
@@ -1202,10 +1191,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-63
-504
-232
-538
+67
+454
+240
+488
 Emergency_Referral
 Emergency_Referral
 0
@@ -1217,10 +1206,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1493
-25
-1933
-253
+1368
+13
+1806
+242
 RTW Outcomes
 NIL
 NIL
@@ -1255,15 +1244,30 @@ NIL
 1
 
 SLIDER
-62
-722
-235
-756
+964
+583
+1137
+616
 OccRehabMultiplier
 OccRehabMultiplier
 0
 50
 10.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+963
+620
+1138
+654
+OverbookingRate
+OverbookingRate
+0
+100
+50.0
 1
 1
 NIL
