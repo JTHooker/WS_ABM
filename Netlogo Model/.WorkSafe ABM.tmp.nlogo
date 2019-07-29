@@ -329,7 +329,7 @@ end
 to ReturntoWork ;;
   if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
   any? Employer1s-here [
-    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment (CostsTreatment + (random OccRehabM ) set PartialRTW 1 ]
+    face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment (CostsTreatment + OccRehabMultiplier ) set PartialRTW 1 ]
 
   if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) ) < Claim_Threshold and InEmployer1 = 1 and
   any? Employer1s-here and Insystem = 1 [
@@ -824,10 +824,10 @@ Mean [ trust ] of workers with [ InSystem = 1 ]
 11
 
 BUTTON
-95
-797
-188
-831
+87
+818
+180
+852
 Day_Off
 \nif remainder ticks Processing_Capacity = 0 [ \nset Assessment_Capacity 0 ]\n\n\nif remainder ticks Processing_Capacity = 1 [ \nset Assessment_Capacity 100 ]\n
 T
@@ -841,10 +841,10 @@ NIL
 1
 
 BUTTON
-192
-797
-287
-831
+183
+818
+278
+852
 Day_Off_New
 if remainder ticks Processing_Capacity = 0 [ \nset Treatment_Capacity 0 ]\n\nif remainder ticks Processing_Capacity = 1 [ \nset Treatment_Capacity 1000 ]
 T
@@ -969,17 +969,17 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-50.0
+20.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-103
-837
-275
-870
+94
+858
+266
+891
 Processing_Capacity
 Processing_Capacity
 0
@@ -999,7 +999,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-54.0
+80.0
 1
 1
 NIL
@@ -1014,7 +1014,7 @@ Injured_Workers
 Injured_Workers
 0
 30
-10.0
+5.0
 1
 1
 NIL
@@ -1047,7 +1047,7 @@ Accept_Threshold
 Accept_Threshold
 0
 2
-0.2
+0.4
 .1
 1
 NIL
@@ -1071,10 +1071,10 @@ NIL
 1
 
 SLIDER
-193
-757
-351
-790
+184
+778
+342
+811
 Treatment_Capacity
 Treatment_Capacity
 0
@@ -1086,10 +1086,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-9
-757
-188
-790
+0
+778
+179
+811
 Assessment_Capacity
 Assessment_Capacity
 0
@@ -1109,7 +1109,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-165.0
+120.0
 1
 1
 NIL
@@ -1150,7 +1150,7 @@ ORCapacity
 ORCapacity
 0
 2
-1.27
+1.25
 .01
 1
 NIL
@@ -1243,7 +1243,7 @@ BUTTON
 168
 96
 Random Injuries
-if remainder ticks 50 = 1 [ set Injured_Workers Injured_Workers + random 2 - random 2 ] 
+if Injured_Workers > 0 and remainder ticks 50 = 1 [ set Injured_Workers Injured_Workers + random 2 - random 2 ]\nif Injured_Workers < 1 [ set Injured_workers 1 ]  
 T
 1
 T
@@ -1255,10 +1255,10 @@ NIL
 1
 
 SLIDER
-1074
-777
-1247
-811
+62
+722
+235
+756
 OccRehabMultiplier
 OccRehabMultiplier
 0

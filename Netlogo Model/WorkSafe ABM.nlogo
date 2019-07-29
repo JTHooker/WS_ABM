@@ -969,7 +969,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-0.0
+20.0
 1
 1
 NIL
@@ -999,7 +999,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-54.0
+80.0
 1
 1
 NIL
@@ -1122,7 +1122,7 @@ SWITCH
 821
 SendORs
 SendORs
-0
+1
 1
 -1000
 
@@ -1150,7 +1150,7 @@ ORCapacity
 ORCapacity
 0
 2
-1.27
+1.25
 .01
 1
 NIL
@@ -1243,7 +1243,7 @@ BUTTON
 168
 96
 Random Injuries
-if remainder ticks 50 = 1 [ set Injured_Workers Injured_Workers + random 2 - random 2 ] 
+if Injured_Workers > 0 and remainder ticks 50 = 1 [ set Injured_Workers Injured_Workers + random 2 - random 2 ]\nif Injured_Workers < 1 [ set Injured_workers 1 ]  
 T
 1
 T
