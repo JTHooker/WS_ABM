@@ -168,7 +168,7 @@ to go
     CountWageReplacementCosts
     ChangeHealth
     TimeOut
-    Cchangeshapeworkers
+    Changeshapeworkers
   ]
 
   ask OccRehabResources [ GoHelp ChangeAddcap changeshape ]
@@ -186,7 +186,7 @@ to go
   countNoRecoverys
    ;; burnpatches
   EstimateTotalSystemCosts
-  if ticks = 10000 [ stop ]
+  if ticks = 2000 [ stop ]
   tick
 end
 
@@ -2119,6 +2119,103 @@ if ticks = 500 [ create-patients 500 [ set shape "person" set state1 0 move-to o
     <enumeratedValueSet variable="Accuracy_of_Estimate">
       <value value="0"/>
       <value value="20"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Baseline" repetitions="10" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="2000"/>
+    <metric>count turtles</metric>
+    <metric>totalsystemcosts</metric>
+    <metric>sum [ coststreatment ] of workers</metric>
+    <metric>sum [ costswagereplacement ] of workers</metric>
+    <metric>count workers with [ goingtoRTW = 1 ]</metric>
+    <metric>mean [ satisfaction ] of workers</metric>
+    <metric>mean [ trust ] of workers</metric>
+    <metric>mean [ dynclaimtime ] of workers</metric>
+    <metric>mean [ health] of workers</metric>
+    <enumeratedValueSet variable="OccRehabMultiplier">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Processing_Capacity">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Max_Claim_Duration">
+      <value value="150"/>
+      <value value="100"/>
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MemorySpan">
+      <value value="168"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Error_of_Estimate">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ExpectationSaliency">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Claim_Threshold">
+      <value value="65"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Emergency_Pres">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="OverbookingRate">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ExperienceSaliency">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Success_Dispute_%">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="InitialV">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ManageExpectations">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="GP_Referral">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MaxTrust">
+      <value value="90"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MinTrust">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Emergency_Referral">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Injured_Workers">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ORCapacity">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="SendORs">
+      <value value="false"/>
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Treatment_Capacity">
+      <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="DiagNosisError">
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Assessment_Capacity">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Accept_Threshold">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PromoteRecoveryatWork">
+      <value value="-1"/>
+      <value value="0"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="AdSpend">
+      <value value="5"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
