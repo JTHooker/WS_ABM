@@ -257,9 +257,9 @@ to AccessTreatment
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 ]
 
-    if InTreatment = 1 and random TreatmentDenials < 1 [ set health (health + ((100 - health) * .05 ) * Responsiveness ) ]
+    if InTreatment = 1 and random TreatmentDenials < 1 [ set health (health + ((100 - health) * .05 ) * Responsiveness ) set satisfaction satisfaction * 1.01 ]
     if Intreatment = 1 and random TreatmentDenials > 1 [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
-      set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength]
+      set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength set satisfaction satisfaction * .99  ]
 end
 
 to OverCapNew
@@ -306,9 +306,14 @@ end
 
 to DisputeToClaimAccepted
   if InSystem = 1 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here [
-    face one-of ClaimAccepteds fd speed set GoingToClaimAccepted 1 set satisfaction satisfaction * .9 set CostsTreatment (CostsTreatment + one-of [ -1 0 ])  ]
+    face one-of TreatmentCentres fd speed set GoingToTreatment 1 set satisfaction satisfaction set CostsTreatment (CostsTreatment + one-of [ 1 0 ])  ]
+  if GoingToTreatment = 1 [ face one-of TreatmentCentres fd speed if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres set InTreatment 1 set GoingToTreatment 0 set indispute 0 ]]
 
+  if InSystem = 1 and Success_Dispute_% < random 100 and InDispute = 1 and any? Disputes-here [
+    face one-of ClaimAccepteds fd speed set GoingToClaimAccepted 1 set satisfaction satisfaction * .9 set CostsTreatment (CostsTreatment + one-of [ -1 0 ]) set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
+      set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength set satisfaction satisfaction * .99 ]
   if GoingToClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds set InClaimAccepted 1 set GoingToClaimAccepted 0 set indispute 0 ]]
+
 end
 
 to EmployernotReady ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
@@ -972,7 +977,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-50.0
+82.0
 1
 1
 NIL
