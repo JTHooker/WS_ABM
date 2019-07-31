@@ -255,7 +255,11 @@ to AccessTreatment
     if InClaimAccepted = 1 and any? ClaimAccepteds-here and count Workers with [ InTreatment = 1 ] < Treatment_Capacity  [
       face one-of TreatmentCentres fd speed  set Goingtotreatment 1 Set InClaimAccepted 0  ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
-      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 set health (health + ((100 - health) * .05 ) * Responsiveness )]
+      if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 ]
+
+    if InTreatment = 1 and random TreatmentDenials < 1 [ set health (health + ((100 - health) * .05 ) * Responsiveness ) ]
+    if Intreatment = 1 and random TreatmentDenials  1 [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
+      set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength]
 end
 
 to OverCapNew
@@ -269,7 +273,7 @@ to OverCapReview
     if InTreatment = 1 and count Workers with [ InTreatment = 1 ] > Treatment_Capacity [
     face one-of ClaimAccepteds fd speed  set goingtoClaimAccepted 1 set InTreatment 0 ]
     if goingtoClaimAccepted = 1 [ Face one-of ClaimAccepteds fd speed ]
-        if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 set InTreatment 0 set goingtoClaimAccepted 0 ]
+    if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 set InTreatment 0 set goingtoClaimAccepted 0 ]
 end
 
 to TreatmentToGeneral
@@ -304,7 +308,7 @@ to DisputeToClaimAccepted
   if InSystem = 1 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here [
     face one-of ClaimAccepteds fd speed set GoingToClaimAccepted 1 set satisfaction satisfaction * .9 set CostsTreatment (CostsTreatment + one-of [ -1 0 ])  ]
 
-  if GoingToClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds set InClaimAccepted 1 set GoingToClaimAccepted 0  set indispute 0 ]]
+  if GoingToClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds set InClaimAccepted 1 set GoingToClaimAccepted 0 set indispute 0 ]]
 end
 
 to EmployernotReady ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
@@ -355,10 +359,9 @@ to Disputesincare
     face one-of Disputes fd speed set GoingtoDispute 1 set color red ]
   if GoingtoDispute = 1 [ face one-of Disputes fd speed  if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .9 ]]
 
-  if ((100 - trust ) / 10 ) > random 1000 and InTreatment = 1 and any? TreatmentCentres-here  [
-     face one-of Disputes fd speed  set GoingtoDispute 1  set color red ]
+  if ((100 - trust ) / 10 ) > random 1000 and InTreatment = 1 and any? TreatmentCentres-here and 1 > random TreatmentDenials [
+     face one-of Disputes fd speed set GoingtoDispute 1  set color red ]
   if GoingtoDispute = 1 [ face one-of Disputes fd speed if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .9  ]]
-
 
 end
 
@@ -399,6 +402,9 @@ to calculatetrustfactor
     set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength]
   if memory = 1 and any? acuteCares-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newassociationstrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
+
+
+
 
   set vmax (MaxTrust / 100) set vmin MinTrust
   if newv > (MaxTrust / 100) [ set newv (MaxTrust / 100) ]
@@ -966,7 +972,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-68.0
+50.0
 1
 1
 NIL
@@ -996,7 +1002,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-94.0
+74.0
 1
 1
 NIL
@@ -1051,10 +1057,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-73
-152
-222
-192
+74
+142
+223
+182
 Mass-Incident
 create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
 NIL
@@ -1119,7 +1125,7 @@ SWITCH
 677
 SendORs
 SendORs
-0
+1
 1
 -1000
 
@@ -1132,7 +1138,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-5.0
+0.0
 1
 1
 NIL
@@ -1154,10 +1160,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-64
-220
-237
-253
+65
+227
+238
+260
 Emergency_Pres
 Emergency_Pres
 0
@@ -1260,7 +1266,7 @@ OccRehabMultiplier
 OccRehabMultiplier
 0
 50
-10.0
+9.0
 1
 1
 NIL
@@ -1275,7 +1281,7 @@ OverbookingRate
 OverbookingRate
 0
 100
-50.0
+48.0
 1
 1
 NIL
@@ -1288,6 +1294,21 @@ SLIDER
 601
 Fight
 Fight
+0
+100
+25.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+64
+192
+237
+226
+TreatmentDenials
+TreatmentDenials
 0
 100
 100.0
