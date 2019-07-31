@@ -186,7 +186,7 @@ to go
   countNoRecoverys
    ;; burnpatches
   EstimateTotalSystemCosts
-  if ticks = 2000 [ stop ]
+ ;; if ticks = 2000 [ stop ]
   tick
 end
 
@@ -211,6 +211,13 @@ to Emergency ;; individuals emerging from the general population into emergency 
       face one-of AcuteCares fd speed  set GoingtoAcuteCare 1 set State1 0 ]
        if GoingtoAcuteCare = 1 [ face one-of AcuteCares fd speed ]
         if any? AcuteCares in-radius 1 [ move-to one-of AcuteCares set InEmergency 1 set InGP 0 set GoingtoAcuteCare 0 set CostsTreatment Coststreatment + 1 ]
+end
+
+to EmployerFromGP ;; trust is going affect the DNA rate here
+  if any? GPs-here and health > (Claim_Threshold - DiagnosisError ) [
+     face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
+     if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
+    if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
 end
 
 to BecomeLodgeClaim ;;
@@ -267,7 +274,7 @@ to TreatmentToGeneral
    if health > Claim_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of RTWs fd speed set GoingtoRTW 1 set InTreatment 0 ]
      if GoingtoRTW = 1 [ face one-of RTWs fd speed ]
-    if any? RTWs in-radius 1 [ move-to one-of RTWs set InRTW 1 set GoingtoRTW 0  ]
+    if any? RTWs in-radius 1 [ move-to one-of RTWs set InRTW 1 set GoingtoRTW 0 set FinalClaimTime DynClaimTime ]
 end
 
 to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
@@ -277,16 +284,9 @@ to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
 end
 
-to EmployerFromGP ;; trust is going affect the DNA rate here
-  if any? GPs-here and health > (Claim_Threshold - DiagnosisError ) [
-     face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
-     if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
-    if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
-end
-
 to TestDispute
    if InSystem = 0 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here and ((100 - trust ) > 1000 )[ ;; so this send people who have a successful claim dispute back to the Claim Lodgement stage - they are not in the system yet
-    face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0 set trust (trust * .9)  ]
+    face one-of LodgeClaims fd speed  set GoingtoLodgeClaim 1 set InDispute 0  ]
     if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed set indispute 0 ]
     if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
 end
@@ -298,33 +298,24 @@ to DisputetoGeneral
     if any? VicPops in-radius 1 [ move-to one-of VicPops die  ]
 end
 
-
-;;******************************************
-
 to DisputeToClaimAccepted
   if InSystem = 1 and Success_Dispute_% > random 100 and InDispute = 1 and any? Disputes-here [
-    face one-of ClaimAccepteds fd speed set GoingToClaimAccepted 1 set trust (trust * .9) set satisfaction satisfaction * .9 set CostsTreatment (CostsTreatment + one-of [ -1 0 ])  ]
+    face one-of ClaimAccepteds fd speed set GoingToClaimAccepted 1 set satisfaction satisfaction * .9 set CostsTreatment (CostsTreatment + one-of [ -1 0 ])  ]
 
   if GoingToClaimAccepted = 1 [ face one-of ClaimAccepteds fd speed if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds set InClaimAccepted 1 set GoingToClaimAccepted 0 set health (health * responsiveness) set indispute 0 ]]
 end
 
-;;******************************************
-
 to EmployernotReady ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
   if [ readiness ] of one-of Employer1s > 1 and any? Employer1s-here [
-      face one-of RTWs fd speed  set GoingtoRTW 1 Set InRTW 0  set FullRTW 1 ]
+      face one-of RTWs fd speed  set GoingtoRTW 1 Set InRTW 0 set FullRTW 1 ]
     if GoingtoRTW = 1 [ face one-of RTWs fd speed  ]
-      if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 Set InEmployer1 0 set GoingtoRTW 0 set fullRTW 1 ]
+      if any? RTWs in-radius 1 [ move-to one-of RTWs Set InRTW 1 Set InEmployer1 0 set GoingtoRTW 0 set fullRTW 1 set FinalClaimTime DynClaimTime ]
 
-  ;; trust is going to affect the likelihood that anyone comes ouut of DNA1 back to review here
   if Trust > random 100 and InRTW = 1 and any? RTWs-here [
       face one-of VicPops fd speed  set GoingtoVicPops 1 Set InRTW 0 set FullRTW 1 ]
     if GoingtoVicPops = 1 [ face one-of VicPops fd speed  ]
       if any? VicPops in-radius 1 [ move-to one-of VicPops Set InRTW 0 die ]
 end
-
-;;;;Calculate this separately to see what's going on
-;;;;;****************************************************************           **************                  ************************
 
 to ReturntoWork ;;
   if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
@@ -338,16 +329,21 @@ to ReturntoWork ;;
 end
 
 to ReturntoWorkwithOccRehab ;; trust is going to affec the DNA2 rate here
+  if GoingtoVicPops = 1 [ face one-of VicPops fd speed if any? VicPops in-radius 1 [ move-to one-of VicPops die ]]
+
   if (health * ([ Readiness ] of one-of Employer1s ) ) > Claim_Threshold and InRTW = 1 and any? RTWs-here [
-     face one-of VicPops fd speed set GoingtoVicPops 1 set InRTW 0 set FinalClaimTime DynClaimTime  ]
+     face one-of VicPops fd speed set GoingtoVicPops 1 set InRTW 0 set FinalClaimTime DynClaimTime ]
+
   if GoingtoVicPops = 1 [ face one-of VicPops fd speed if any? VicPops in-radius 1 [ move-to one-of VicPops die ]] ;; then people need to actually ret from the pool
 end
 
 to ClaimAfterMisdiagnosis
   if InSystem = 0 and any? Employer1s-here and health < Claim_Threshold and inEmployer1 = 1 [
-    face one-of LodgeClaims fd speed set GoingtoEmployer1 0 set inEmployer1 0 set goingtoLodgeClaim 1 ]
+    face one-of LodgeClaims fd speed set GoingtoEmployer1 0 set inEmployer1 0 set goingtoLodgeClaim 1 set memory 1  ]
    if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed  ]
       if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
+  if memory = 1 and InSystem = 0 and goingtoLodgeClaim = 1 [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
+    set newassociationstrength ( initialassociationstrength - newv ) set trust (trust - newassociationstrength) ]
 end
 
 
@@ -355,11 +351,11 @@ to Disputesincare
 
  if ((100 - trust ) / 10 ) > random 100 and InLodgeClaim = 1 and any? LodgeClaims-here [
     face one-of Disputes fd speed set GoingtoDispute 1 set color red ]
-  if GoingtoDispute = 1 [ face one-of Disputes fd speed  if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .9 set trust trust * .5 ]]
+  if GoingtoDispute = 1 [ face one-of Disputes fd speed  if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InLodgeClaim 0 set satisfaction satisfaction * .9 ]]
 
   if ((100 - trust ) / 10 ) > random 100 and InTreatment = 1 and any? TreatmentCentres-here  [
      face one-of Disputes fd speed  set GoingtoDispute 1  set color red ]
-  if GoingtoDispute = 1 [ face one-of Disputes fd speed if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .9 set trust trust * .5  ]]
+  if GoingtoDispute = 1 [ face one-of Disputes fd speed if any? Disputes in-radius 1 [ move-to one-of Disputes set GoingtoDispute 0 set InDispute 1 set InTreatment 0 set satisfaction satisfaction * .9  ]]
 end
 
 to CountNoRecoverys
@@ -380,7 +376,8 @@ to rememberevents
     if any? TreatmentCentres-here [ set memory 1 set timenow ticks ]
     if any? ClaimAccepteds-here [ set memory 1 set timenow ticks ]
     if any? acuteCares-here [ set memory 1 set timenow ticks ]
-    if any? GPs-here and memory = 1 [ set timenow ticks ]
+    if any? GPs-here [ set memory 1  set timenow ticks ]
+    if any? Disputes-here  [ set memory 1 set timenow ticks ]
 
   if ticks - timenow > memoryspan [ set memory 0 set trust trust ] ;; it needs to do nothing if memory = 0 here. Trust needs to go up if a good thing happens, that's all.
 
@@ -393,7 +390,9 @@ to calculatetrustfactor
   if memory = 1 and any? TreatmentCentres-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newAssociationStrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
   if memory = 1 and any? ClaimAccepteds-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
-    set newassociationstrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
+    set newassociationstrength ( initialassociationstrength - newv ) set trust trust - newassociationstrength]
+  if memory = 1 and any? Disputes-here or GoingtoDispute = 1 [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
+    set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength]
   if memory = 1 and any? acuteCares-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newassociationstrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
 
@@ -425,8 +424,8 @@ to limitInitialAssociation
 end
 
 to SocialEpi
-  if any? other Workers-here with [ trust <  [ trust ] of myself ] [ set trust trust - 1 ]
-  if any? other Workers-here with [ trust >  [ trust ] of myself ] [ set trust trust + 1 ]
+  if any? other Workers-here with [ trust <  [ trust ] of myself ] [ set trust (trust - newassociationstrength) ]
+  if any? other Workers-here with [ trust >  [ trust ] of myself ] [ set trust (trust + newassociationstrength) ]
 end
 
 to RemoveHealthyWorkers
@@ -659,7 +658,7 @@ NIL
 10.0
 true
 true
-"" "if remainder ticks 3000 =  0 [ clear-plot ]  \n\n;;if \"Reset patients\" = true [ clear-plot ] "
+"" " \n\nif \"Reset patients\" = true [ clear-plot ] "
 PENS
 "Treatment Costs" 1.0 0 -5298144 true "" "plot sum [ CostsTreatment ] of workers with [ InSystem = 1 ] "
 "Wage Rep Costs" 1.0 0 -7500403 true "" "plot sum [ CostsWageReplacement ] of workers with [ Insystem = 1 ] "
@@ -687,12 +686,12 @@ SLIDER
 67
 414
 241
-448
+447
 GP_Referral
 GP_Referral
 0
 100
-50.0
+48.0
 1
 1
 NIL
@@ -728,7 +727,7 @@ SLIDER
 963
 658
 1138
-692
+691
 MaxTrust
 MaxTrust
 0
@@ -743,7 +742,7 @@ SLIDER
 963
 695
 1140
-729
+728
 MinTrust
 MinTrust
 0
@@ -885,7 +884,7 @@ SLIDER
 67
 337
 239
-371
+370
 ManageExpectations
 ManageExpectations
 0
@@ -900,7 +899,7 @@ SLIDER
 67
 377
 240
-411
+410
 Error_of_Estimate
 Error_of_Estimate
 0
@@ -916,7 +915,7 @@ PLOT
 448
 1564
 573
-Association
+Claim Duration
 NIL
 NIL
 0.0
@@ -927,7 +926,7 @@ true
 false
 "" ""
 PENS
-"Association" 1.0 0 -16777216 true "" " if ticks > 0 [ plot mean [ newassociationstrength * 10 ] of workers ]"
+"Claim Duration" 1.0 0 -16777216 true "" "if ticks > 50 [ plot mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ] ]"
 
 PLOT
 1364
@@ -945,9 +944,10 @@ true
 true
 "if ticks = 1 [ clear-plot ] " ""
 PENS
-"Mean Trust" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers with [ insystem = 1 ] ]"
+"Mean Trust of All Workers" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers ]"
 "Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers with [ insystem = 1 ] ] "
 "Mean Health" 1.0 0 -14070903 true "" "if ticks > 0 [ plot mean [ health ] of workers with [ insystem = 1 ] ] "
+"Trust of Workers In System" 1.0 0 -11221820 true "" "if ticks > 0 [ plot mean [ trust ] of workers with [ insystem = 1 ] ]"
 
 SLIDER
 362
@@ -958,7 +958,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-50.0
+83.0
 1
 1
 NIL
@@ -988,7 +988,7 @@ Claim_Threshold
 Claim_Threshold
 0
 100
-65.0
+67.0
 1
 1
 NIL
@@ -1036,7 +1036,7 @@ Accept_Threshold
 Accept_Threshold
 0
 2
-0.3
+0.6
 .1
 1
 NIL
@@ -1078,7 +1078,7 @@ SLIDER
 0
 603
 165
-637
+636
 Assessment_Capacity
 Assessment_Capacity
 0
@@ -1098,7 +1098,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 200
-165.0
+144.0
 1
 1
 NIL
@@ -1119,12 +1119,12 @@ SLIDER
 709
 682
 886
-716
+715
 PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-0.0
+8.0
 1
 1
 NIL
@@ -1139,7 +1139,7 @@ ORCapacity
 ORCapacity
 0
 2
-1.0
+0.97
 .01
 1
 NIL
@@ -1164,12 +1164,12 @@ SLIDER
 709
 605
 886
-639
+638
 DiagNosisError
 DiagNosisError
 0
 20
-3.0
+10.0
 1
 1
 NIL
@@ -1194,7 +1194,7 @@ SLIDER
 67
 454
 240
-488
+487
 Emergency_Referral
 Emergency_Referral
 0
@@ -1262,7 +1262,7 @@ SLIDER
 963
 620
 1138
-654
+653
 OverbookingRate
 OverbookingRate
 0
@@ -2121,7 +2121,7 @@ if ticks = 500 [ create-patients 500 [ set shape "person" set state1 0 move-to o
       <value value="20"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="Baseline" repetitions="10" runMetricsEveryStep="true">
+  <experiment name="Baseline" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="2000"/>
@@ -2132,7 +2132,7 @@ if ticks = 500 [ create-patients 500 [ set shape "person" set state1 0 move-to o
     <metric>count workers with [ goingtoRTW = 1 ]</metric>
     <metric>mean [ satisfaction ] of workers</metric>
     <metric>mean [ trust ] of workers</metric>
-    <metric>mean [ dynclaimtime ] of workers</metric>
+    <metric>mean [ FinalClaimTime ] of workers with [ Insystem = 1 and GoingtoVicPops = 1 ]</metric>
     <metric>mean [ health] of workers</metric>
     <enumeratedValueSet variable="OccRehabMultiplier">
       <value value="10"/>
@@ -2142,8 +2142,6 @@ if ticks = 500 [ create-patients 500 [ set shape "person" set state1 0 move-to o
     </enumeratedValueSet>
     <enumeratedValueSet variable="Max_Claim_Duration">
       <value value="150"/>
-      <value value="100"/>
-      <value value="50"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="MemorySpan">
       <value value="168"/>
