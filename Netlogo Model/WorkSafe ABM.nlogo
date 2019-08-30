@@ -1,5 +1,7 @@
+extensions [ sound ]
+
 globals [ NoRecoverycount
-  DisputeCount TotalSystemCosts]
+  DisputeCount TotalSystemCosts name number captain]
 
 
 breed [ VicPops VicPop ]
@@ -110,10 +112,41 @@ to setup
   setup-image
   set Injured_workers 10
   reset-ticks
+
 end
 
+to setupscenario
+  ;;show user-input "Hi - Welcome to the WorkSafe Digital Twin - What is your team name?"
+  set name user-input "Welcome to the WorkSim Digital Twin Challenge - What is your team name?"
+  set captain user-input "What is your team captain's name?"
+  set number user-input "How many brains do we have around the table?"
+  show name
+  user-message (word "OK, " name " (and especially " captain "), this is going to be difficult - we hope you, your team, and your "number " brains are ready")
+  user-message (word "Here is the scenario, " name ". It is the year 2056. Your team has been brought in to revitalise WorkSim after a lacklustre period of performance. Too many people continue to be injured in workplace accidents, Satisfaction with WorkSim among injured workers is down, providers don't enjoy interacting with WorkSim "
+    "much, liabilities are up, and RTW rates could be improved. Sometimes you wonder if much has changed in the last 35 years.")
+  user-message (word "But, given your high-flying and impressive career in the public and private sectors to date, you feel like you and your team have the skills to meet the challenge. You "
+    "receive an encouraging phone call from the chair of the Board, wishing you all the best and setting out expectations for the first year")
+  if user-yes-or-no? "Listen to call?" [ playaudio ]
+  user-message ("The first thing you do is assess the state of play. You ask your most trusted advisor about how things sit right now. This is what they tell you...")
+  user-message (word "Hi " name ", Things aren't great. New Injured workers are still coming in at around " Injured_Workers " per day. Our treatment denials are at " TreatmentDenials "%, which means " TreatmentDenials "% of service requests are being rejected by providers. This means people are waiting longer for "
+    "services and experiencing delays in treatment. We have tried to manage expectations of assessment and treatment, but beyond about " ManageExpectations " days, people do start to get a bit frustrated and upset that nothing is happening with their claim. They have long memories when things go badly, too. "
+  "Agents' capacity to assess people is at about " Assessment_Capacity " per day and the treatment and hospital system is able to handle around " Treatment_Capacity " people per day at present. Changes in these numbers through increasing or decreasing processing efficiencies "
+   "can help speed things up or slow them down. ")
+  user-message (word "Our total dispute numbers are up and down, but successful client dispute rates are sitting at around " Success_Dispute_% "%. In terms of policies, we are continuing to fund treatment for anyone "
+  "whose work capacity is below " Claim_Threshold " out of 100. We could tighten this up, but I'm not sure what the consequences for the scheme would be. Sometimes the doctors get the diagnosis wrong, too, which delays recovery - misdiagnoses are running at about " DiagnosisError " points - we could improve that. Other things "
+  "to be aware of are that we're spending about $" AdSpend "million a year on safety and RTW advertising at the moment - more spend might reduce incidents and encourage people to return to partial work? ")
+  user-message (word "Speaking of RTW, the balance of our preference for RTW 'at work' rather than straight from home or treatment is currently " PromoteRecoveryatWork ". We also have the option of funding more Occupational "
+   "Rehabilitation services to help with this, though this will cost money, of course. We might save it in salary replacements, though? ")
+  user-message (word "Finally, there is the issue of long-tail claims. At present, the maximum number of weeks people can be eligible for treatment and wage-replacement costs is " Max_claim_duration ". We might want to revisit that?")
+  go
+  if user-yes-or-no? "So - I'll leave all this information with you and let you watch what's happened over the last few months. So, what's your plan? Do you think you're ready to start?" [ go ]
+
+end
+
+
+
 to isClaimType
-  set ClaimType one-of [ 0 1 2 ]
+  set ClaimType one-of [ 0 0 0 0 0 0 0 1 1 2 ]
 
   if claimType = 0 [ set label "A" ]
   if claimType = 1 [ set label "C" ]
@@ -236,15 +269,15 @@ end
 
 to BecomeAcceptedClaim
   ifelse Label = "A" and InLodgeClaim = 1 and any? LodgeClaims-here
-  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.9 .1 ) * (random-normal Accept_Threshold .1 ) > 1 [
+  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.9 .1 ) * (random-normal Processing_Efficiency .1 ) > 1 [
     face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ] [ Disputesincare ]
 
   ifelse Label = "C" and InLodgeClaim = 1 and any? LodgeClaims-here
-  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.6 .1 ) * (random-normal Accept_Threshold .1 ) > 1 [
+  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.6 .1 ) * (random-normal Processing_Efficiency .1 ) > 1 [
     face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ] [ Disputesincare ]
 
   ifelse Label = "M" and InLodgeClaim = 1 and any? LodgeClaims-here
-  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.4 .1 ) * (random-normal Accept_Threshold .1 ) > 1 [
+  and count Workers with [  InClaimAccepted = ( 1 * OverbookingRate )]  < Assessment_Capacity and (random-normal 0.4 .1 ) * (random-normal Processing_Efficiency .1 ) > 1 [
       face one-of ClaimAccepteds fd speed set goingtoClaimAccepted 1 Set InLodgeClaim 0  ] [ Disputesincare ]
 
   if any? ClaimAccepteds in-radius 1 [ move-to one-of ClaimAccepteds Set InClaimAccepted 1 Set InLodgeClaim 0 set goingtoClaimAccepted 0 set InSystem 1 set Entrytime ticks ]
@@ -456,7 +489,7 @@ to CountWageReplacementCosts
 end
 
 to EstimateTotalSystemCosts
-  set TotalSystemCosts (sum [ CostsWageReplacement ] of workers + sum [ CostsTreatment ] of workers + AdSpend * 10  )
+  set TotalSystemCosts (sum [ CostsWageReplacement ] of workers + sum [ CostsTreatment ] of workers + (AdSpend * 100 ) )
 end
 
 to timeout
@@ -500,6 +533,13 @@ end
 
 to GiveUp
   if InSystem = 0 and goingtoDispute = 1 and Stubborness > Fight [ die ]
+end
+
+to playaudio
+  sound:play-sound "theboss.wav" ;; Yep, Bruce here. Obviously wishing you all the best of luck for your and your team's efforts this year. I don't think you'll be surprised to hear that we have big expectations
+  ;; for you. No pressure of course. But by the end of the year we really do want to see the place turned around. That means lower liabilities and costs than we currently have, we want very satisfied workers and public - at least about 75 points
+  ;; and we want high levels of health and return to work. We'll be keeping a keen eye on progress. Chat soon.
+  user-message ("Listening to Bruce's voicemail....")
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -908,7 +948,7 @@ ManageExpectations
 ManageExpectations
 0
 50
-50.0
+26.0
 1
 1
 NIL
@@ -984,21 +1024,6 @@ NIL
 HORIZONTAL
 
 SLIDER
-79
-683
-251
-716
-Processing_Capacity
-Processing_Capacity
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
 360
 644
 519
@@ -1051,11 +1076,11 @@ SLIDER
 683
 521
 716
-Accept_Threshold
-Accept_Threshold
+Processing_Efficiency
+Processing_Efficiency
 0
 2
-1.3
+1.0
 .1
 1
 NIL
@@ -1088,7 +1113,7 @@ Treatment_Capacity
 0
 2000
 1000.0
-1
+100
 1
 NIL
 HORIZONTAL
@@ -1116,8 +1141,8 @@ SLIDER
 Max_Claim_Duration
 Max_Claim_Duration
 0
-200
-150.0
+300
+155.0
 1
 1
 NIL
@@ -1143,7 +1168,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
--1.0
+0.0
 1
 1
 NIL
@@ -1188,7 +1213,7 @@ DiagNosisError
 DiagNosisError
 0
 20
-3.0
+5.0
 1
 1
 NIL
@@ -1296,7 +1321,7 @@ SLIDER
 68
 567
 241
-601
+600
 Fight
 Fight
 0
@@ -1311,12 +1336,44 @@ SLIDER
 64
 192
 237
-226
+225
 TreatmentDenials
 TreatmentDenials
 0
 100
-0.0
+10.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+342
+35
+422
+69
+Scenario
+SetupScenario
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+79
+683
+251
+716
+Processing_Capacity
+Processing_Capacity
+0
+100
+50.0
 1
 1
 NIL
