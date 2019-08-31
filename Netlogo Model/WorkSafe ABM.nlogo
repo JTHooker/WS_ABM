@@ -138,8 +138,7 @@ to setupscenario
   user-message (word "Speaking of RTW, the balance of our preference for RTW 'at work' rather than straight from home or treatment is currently " PromoteRecoveryatWork ". We also have the option of funding more Occupational "
    "Rehabilitation services to help with this, though this will cost money, of course. We might save it in salary replacements, though? ")
   user-message (word "Finally, there is the issue of long-tail claims. At present, the maximum number of weeks people can be eligible for treatment and wage-replacement costs is " Max_claim_duration ". We might want to revisit that?")
-  go
-  if user-yes-or-no? "So - I'll leave all this information with you and let you watch what's happened over the last few months. So, what's your plan? Do you think you're ready to start?" [ go ]
+  if user-yes-or-no? "So - I'll leave all this information with you and let you watch what's happened over the last few months. I'll check in with you each couple on months and see how your decisions have been going. So, what's your plan? Do you think you're ready to start?" [ go ]
 
 end
 
@@ -221,7 +220,12 @@ to go
   countNoRecoverys
    ;; burnpatches
   EstimateTotalSystemCosts
- ;; if ticks = 2000 [ stop ]
+  if ticks > 0 and remainder ticks 50 = 0  [ performance stop ] ;;and name != 0
+  ;;monitorsatisfaction
+  ;; monitortrust
+  ;;monitorRTW
+  ;;monitorcosts ;; to do set up random monitors - create a finish to the game that has an audio recording and message
+
   tick
 end
 
@@ -290,8 +294,8 @@ to AccessTreatment
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed  ]
       if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 Set InClaimAccepted 0 set GoingtoTreatment 0 ]
 
-    if InTreatment = 1 and random TreatmentDenials < 1 [ set health (health + ((100 - health) * .05 ) * Responsiveness ) set satisfaction satisfaction * 1.01 ]
-    if Intreatment = 1 and random TreatmentDenials > 1 [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
+    if InTreatment = 1 and TreatmentDenials < random 100 [ set health (health + ((100 - health) * .05 ) * Responsiveness ) set satisfaction satisfaction * 1.01 ]
+    if Intreatment = 1 and TreatmentDenials > random 100 [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
       set newassociationstrength ( initialassociationstrength + newv ) set trust trust - newassociationstrength set satisfaction satisfaction * .99  ]
 end
 
@@ -540,6 +544,11 @@ to playaudio
   ;; for you. No pressure of course. But by the end of the year we really do want to see the place turned around. That means lower liabilities and costs than we currently have, we want very satisfied workers and public - at least about 75 points
   ;; and we want high levels of health and return to work. We'll be keeping a keen eye on progress. Chat soon.
   user-message ("Listening to Bruce's voicemail....")
+end
+
+to performance
+  user-message (word "You have a new text message from the chair. Hi " name ", Bruce here - just checking in ahead of next week's board meeting - I'm sure everything is going very well... Are you planning any changes?")
+  if user-yes-or-no? "Make changes to the system before the board meeting?" [ stop ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -1024,15 +1033,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-360
-644
-519
-677
+363
+645
+521
+679
 Claim_Threshold
 Claim_Threshold
 0
 100
-90.0
+95.0
 1
 1
 NIL
@@ -1087,10 +1096,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-74
-142
-223
-182
+747
+33
+896
+73
 Mass-Incident
 create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
 NIL
@@ -1142,7 +1151,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 300
-155.0
+300.0
 1
 1
 NIL
@@ -1341,17 +1350,17 @@ TreatmentDenials
 TreatmentDenials
 0
 100
-10.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-342
-35
-422
-69
+105
+145
+185
+179
 Scenario
 SetupScenario
 NIL
@@ -1378,6 +1387,28 @@ Processing_Capacity
 1
 NIL
 HORIZONTAL
+
+MONITOR
+1639
+343
+1697
+388
+Sat
+mean [ satisfaction ] of workers with [ insystem = 1 ]
+1
+1
+11
+
+MONITOR
+1640
+390
+1698
+435
+Health
+mean [ health ] of workers with [ Insystem = 1 ]
+1
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
