@@ -1,7 +1,7 @@
 extensions [ sound ]
 
 globals [ NoRecoverycount
-  DisputeCount TotalSystemCosts name number captain]
+  DisputeCount TotalSystemCosts name number captain time ]
 
 
 breed [ VicPops VicPop ]
@@ -112,7 +112,7 @@ to setup
   setup-image
   set Injured_workers 10
   reset-ticks
-
+  set time ticks
 end
 
 to setupscenario
@@ -120,13 +120,13 @@ to setupscenario
   set name user-input "Welcome to the WorkSim Digital Twin Challenge - What is your team name?"
   set captain user-input "What is your team captain's name?"
   set number user-input "How many brains do we have around the table?"
-  show name
   user-message (word "OK, " name " (and especially " captain "), this is going to be difficult - we hope you, your team, and your "number " brains are ready")
   user-message (word "Here is the scenario, " name ". It is the year 2056. Your team has been brought in to revitalise WorkSim after a lacklustre period of performance. Too many people continue to be injured in workplace accidents, Satisfaction with WorkSim among injured workers is down, providers don't enjoy interacting with WorkSim "
     "much, liabilities are up, and RTW rates could be improved. Sometimes you wonder if much has changed in the last 35 years.")
   user-message (word "But, given your high-flying and impressive career in the public and private sectors to date, you feel like you and your team have the skills to meet the challenge. You "
     "receive an encouraging phone call from the chair of the Board, wishing you all the best and setting out expectations for the first year")
   if user-yes-or-no? "Listen to call?" [ playaudio ]
+  user-message ( "The Board are setting very clear expectations for you to achieve. After 10 meetings, the average satisfaction rating among injured workers must be at least 75 points. The average health of injured workers must be at least 70 points and average claim durations must be less than 52 weeks. The average total system costs must be below $10 billion. If you fail to acheive these targets, you will probaly be fired.")
   user-message ("The first thing you do is assess the state of play. You ask your most trusted advisor about how things sit right now. This is what they tell you...")
   user-message (word "Hi " name ", Things aren't great. New Injured workers are still coming in at around " Injured_Workers " per day. Our treatment denials are at " TreatmentDenials "%, which means " TreatmentDenials "% of service requests are being rejected by providers. This means people are waiting longer for "
     "services and experiencing delays in treatment. We have tried to manage expectations of assessment and treatment, but beyond about " ManageExpectations " days, people do start to get a bit frustrated and upset that nothing is happening with their claim. They have long memories when things go badly, too. "
@@ -210,7 +210,7 @@ to go
   ask OccRehabResources [ changecolor ]
 
   ask Employer1s [ Recalculatereadiness ]
-
+ set time time + 1
   ask turtles [
     set size (5 + sqrt count Workers in-radius 1 )
       ]
@@ -220,8 +220,15 @@ to go
   countNoRecoverys
    ;; burnpatches
   EstimateTotalSystemCosts
-  if ticks > 0 and remainder ticks 50 = 0  [ performance stop ] ;;and name != 0
-  ;;monitorsatisfaction
+  if time = 500  [ performance  ] ;;and name != 0
+  if time = 1000  [ performance  ] ;;and name != 0
+  if time = 1500  [ performance  ] ;;and name != 0
+  if time = 2000  [ performance  ] ;;and name != 0
+  if time = 2500  [ performance  ] ;;and name != 0
+  if time = 3000  [ performance  ] ;;and name != 0
+  if time = 3500  [ performance  ] ;;and name != 0
+  if time = 4000 [ finalstate ]
+  monitorsatisfaction
   ;; monitortrust
   ;;monitorRTW
   ;;monitorcosts ;; to do set up random monitors - create a finish to the game that has an audio recording and message
@@ -445,9 +452,6 @@ to calculatetrustfactor
   if memory = 1 and any? acuteCares-here [ set newv ( ( saliencyExpectation * SaliencyExperience ) * (( (MaxTrust / 100) - initialassociationstrength ) ))
     set newassociationstrength ( initialassociationstrength - newv ) set trust trust + newassociationstrength]
 
-
-
-
   set vmax (MaxTrust / 100) set vmin MinTrust
   if newv > (MaxTrust / 100) [ set newv (MaxTrust / 100) ]
   if newv < MinTrust [ set newv MinTrust ]
@@ -547,8 +551,36 @@ to playaudio
 end
 
 to performance
-  user-message (word "You have a new text message from the chair. Hi " name ", Bruce here - just checking in ahead of next week's board meeting - I'm sure everything is going very well... Are you planning any changes?")
-  if user-yes-or-no? "Make changes to the system before the board meeting?" [ stop ]
+   set time time + 1
+   user-message (word "You have a new text message from the chair. Hi " name ", Bruce here - just checking in after the Board meeting today - I'm sure everything in hand ...but just confirming the changes we talked about?")
+   user-message ("Now's your chance to change your strategy before the next meeting. What do you want to do?")
+  if time > ticks [ go ]
+  set time ticks
+end
+
+to monitorsatisfaction
+  if mean [ satisfaction ] of workers < 70 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Look we've heard satisfaction is running a little low - just wondering if you have any plans up your sleeve? I'll leave it with you")  ]
+  if mean [ trust ] of workers < 75 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Getting some bad reports in about dispute numbers and our reputation in the community. A bit concerned about how we're coming across. Is it as bad as I hear? Anything we can try? Chat soon, Bruce")]
+  if count workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 0 and mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 52 and 1 > random 500 [ playdisputes user-message (word "We're all a bit worried here about the claim durations - any way we can pull these back? Worried about the costs. Give me a call")  ]
+  if totalsystemcosts > 5000 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hey, just keep an eye on the books - don't let them get away! Talk soon, Bruce") ]
+  if totalsystemcosts > 10000 and 1 > random 500 [ playcosts user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi - Just looking at the books ahead of the next meeting - costs look high. Can we chat?")  ]
+  if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 70 and 1 > random 500 [ user-message ("NEW EMAIL FROM THE CHAIR: We don't seem to be quite hitting our targets for worker health. We'd like to see some improvements soon")]
+  if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] > 50 and 1 > random 500 [ playhealth user-message ("NEW TEXT MESSAGE FROM THE CHAIR: Hi - Worker health seem to be going pretty badly - We need to turn this around asap. Let's plan some changes")]
+end
+
+ to playdisputes
+ user-message ("You have a new voicemail" ) sound:play-sound-and-wait "disputes.wav"
+ end
+
+ to playhealth
+  user-message ("You have a new voicemail" ) sound:play-sound-and-wait "health.wav"
+ end
+
+to playcosts
+  user-message ("You have a new voicmail" ) sound:play-sound-and-wait "blowout.wav"
+end
+
+to finalstate
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -717,7 +749,7 @@ PLOT
 250
 1362
 443
-Costs
+Costs (000's)
 NIL
 NIL
 0.0
@@ -785,7 +817,7 @@ MemorySpan
 MemorySpan
 0
 365
-168.0
+365.0
 1
 1
 NIL
@@ -1036,12 +1068,12 @@ SLIDER
 363
 645
 521
-679
+678
 Claim_Threshold
 Claim_Threshold
 0
 100
-95.0
+50.0
 1
 1
 NIL
@@ -1350,7 +1382,7 @@ TreatmentDenials
 TreatmentDenials
 0
 100
-50.0
+20.0
 1
 1
 NIL
@@ -1406,6 +1438,17 @@ MONITOR
 435
 Health
 mean [ health ] of workers with [ Insystem = 1 ]
+1
+1
+11
+
+MONITOR
+1500
+512
+1557
+557
+Mean
+mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ]
 1
 1
 11
