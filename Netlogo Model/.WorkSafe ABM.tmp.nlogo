@@ -229,7 +229,8 @@ to go
   if time = 3500 and feedback = true  [ performance  ] ;;and name != 0
   if time = 4000 and feedback = true  [ finalstate stop ]
   monitorsatisfaction
-  ;; monitortrust
+  Mass-Incident
+  IncomingInjuries
   ;;monitorRTW
   ;;monitorcosts ;; to do set up random monitors - create a finish to the game that has an audio recording and message
 
@@ -569,7 +570,7 @@ to monitorsatisfaction
     if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 70 and 1 > random 500 [ user-message ("NEW EMAIL FROM THE CHAIR: We don't seem to be quite hitting our targets for worker health. We'd like to see some improvements soon")]
     if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 50 and 1 > random 500 [ playhealth user-message ("NEW TEXT MESSAGE FROM THE CHAIR: Hi - Worker health seem to be going pretty badly - We need to turn this around asap. Let's plan some changes")]
     if Adspend < 15 and 1 > random 1000 [ user-message (word "YOU HAVE A NEW EMAIL FROM THE HEAD OF MARKETING: Hi, " name ". We have costed that new campaign idea and I really think could help us meet our targets. What do you think? Can we allocate more budget for AdSpend?")]
-    if count workers with [ FailedRTW = 1 ] > count workers with [ FullRTW = 1 ] and 1 > r5 [ user-message (word "NEW MESSAGE FROM THE CHAIR: Hi, " name ", Hearing more workers failed to RTW last month than successfully returned - Is this part of the plan? Enlighten me, please.")]
+    if count workers with [ FailedRTW = 1 ] > count workers with [ FullRTW = 1 ] and 1 > random 500 [ user-message (word "NEW MESSAGE FROM THE CHAIR: Hi, " name ", Hearing more workers failed to RTW last month than successfully returned - Is this part of the plan? Enlighten me, please.")]
   ]
 end
 
@@ -594,6 +595,17 @@ to finalstate
   if mean [ satisfaction ] of workers > 75 and mean [ health ] of workers with [ Insystem = 1 ] > 70 and totalsystemcosts < 10000 [ sound:play-sound-and-wait "end of year.wav" ]
   if mean [ satisfaction ] of workers < 75 or mean [ health ] of workers with [ Insystem = 1 ] < 70 or totalsystemcosts > 10000 [ sound:play-sound-and-wait "fired.wav" ]
 end
+
+to Mass-Incident
+  if 1 > random 5000 [ playalert ]
+end
+
+to playalert
+  sound:play-sound-and-wait "alarm.wav"
+end
+
+to incomingInjuries
+  if remainder ticks 200 = 0 [
 @#$#@#$#@
 GRAPHICS-WINDOW
 335
@@ -1145,7 +1157,7 @@ BUTTON
 896
 73
 Mass-Incident
-create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
+create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations playalert]\n    
 NIL
 1
 T

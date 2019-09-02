@@ -229,7 +229,8 @@ to go
   if time = 3500 and feedback = true  [ performance  ] ;;and name != 0
   if time = 4000 and feedback = true  [ finalstate stop ]
   monitorsatisfaction
-  ;; monitortrust
+  Mass-Incident
+  IncomingInjuries
   ;;monitorRTW
   ;;monitorcosts ;; to do set up random monitors - create a finish to the game that has an audio recording and message
 
@@ -593,6 +594,18 @@ end
 to finalstate
   if mean [ satisfaction ] of workers > 75 and mean [ health ] of workers with [ Insystem = 1 ] > 70 and totalsystemcosts < 10000 [ sound:play-sound-and-wait "end of year.wav" ]
   if mean [ satisfaction ] of workers < 75 or mean [ health ] of workers with [ Insystem = 1 ] < 70 or totalsystemcosts > 10000 [ sound:play-sound-and-wait "fired.wav" ]
+end
+
+to Mass-Incident
+  if 1 > random 5000 [ playalert ]
+end
+
+to playalert
+  sound:play-sound-and-wait "alarm.wav"
+end
+
+to incomingInjuries
+  if remainder ticks 200 = 0 [ set Injured_workers Injured_workers + random 1 - random 1 ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -1145,7 +1158,7 @@ BUTTON
 896
 73
 Mass-Incident
-create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations ]
+create-Workers 500 [ set shape \"person\" set state1 0 move-to one-of VicPops set color white set trust random-normal 80 10 set speed random-normal 1 .1\n    resettrust set memory_Span random-normal Memoryspan 30 set memory 0 set initialassociationstrength InitialV \n    set saliencyExpectation random-normal ExpectationSaliency .1 set SaliencyExperience random-normal ExperienceSaliency .1 set LodgeClaimExpectations ManageExpectations playalert]\n    
 NIL
 1
 T
