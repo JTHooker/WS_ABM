@@ -597,7 +597,9 @@ to finalstate
 end
 
 to Mass-Incident
-  if 1 > random 5000 [ playalert ]
+  if feedback = true [
+    if 1 > random 5000 [ playalert ]
+  ]
 end
 
 to playalert
@@ -605,7 +607,9 @@ to playalert
 end
 
 to incomingInjuries
-  if remainder ticks 200 = 0 [ set Injured_workers Injured_workers + random 1 - random 1 ]
+  if feedback = true [
+    if remainder ticks 200 = 0 [ set Injured_workers Injured_workers + random 1 - random 1 ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW

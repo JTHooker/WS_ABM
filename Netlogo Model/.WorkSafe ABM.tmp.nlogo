@@ -601,11 +601,12 @@ to Mass-Incident
 end
 
 to playalert
-  sound:play-sound-and-wait "alarm.wav"
+  isound:play-sound-and-wait "alarm.wav"
 end
 
 to incomingInjuries
-  if remainder ticks 200 = 0 [
+  if remainder ticks 200 = 0 [ set Injured_workers Injured_workers + random 1 - random 1 ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 335
