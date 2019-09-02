@@ -126,14 +126,14 @@ to setupscenario
   user-message (word "But, given your high-flying and impressive career in the public and private sectors to date, you feel like you and your team have the skills to meet the challenge. You "
     "receive an encouraging phone call from the chair of the Board, wishing you all the best and setting out expectations for the first year")
   if user-yes-or-no? "Listen to call?" [ playaudio ]
-  user-message ( "The Board are setting very clear expectations for you to achieve. After 10 meetings, the average satisfaction rating among injured workers must be at least 75 points. The average health of injured workers must be at least 70 points and average claim durations must be less than 52 weeks. The average total system costs must be below $10 billion. If you fail to acheive these targets, you will probaly be fired.")
+  user-message ( "The Board are setting very clear expectations for you to achieve. After 10 meetings, the average satisfaction rating among injured workers must be at least 75 points. The average health of injured workers must be at least 70 points and average claim durations must be less than 52 weeks. The average total system costs must be below $5000 billion. If you fail to acheive these targets, you will probaly be fired.")
   user-message ("The first thing you do is assess the state of play. You ask your most trusted advisor about how things sit right now. This is what they tell you...")
   user-message (word "Hi " name ", Things aren't great. New Injured workers are still coming in at around " Injured_Workers " per day. Our treatment denials are at " TreatmentDenials "%, which means " TreatmentDenials "% of service requests are being rejected by providers. This means people are waiting longer for "
     "services and experiencing delays in treatment. We have tried to manage expectations of assessment and treatment, but beyond about " ManageExpectations " days, people do start to get a bit frustrated and upset that nothing is happening with their claim. They have long memories when things go badly, too. "
   "Agents' capacity to assess people is at about " Assessment_Capacity " per day and the treatment and hospital system is able to handle around " Treatment_Capacity " people per day at present. Changes in these numbers through increasing or decreasing processing efficiencies "
    "can help speed things up or slow them down. ")
   user-message (word "Our total dispute numbers are up and down, but successful client dispute rates are sitting at around " Success_Dispute_% "%. In terms of policies, we are continuing to fund treatment for anyone "
-  "whose work capacity is below " Claim_Threshold " out of 100. We could tighten this up, but I'm not sure what the consequences for the scheme would be. Sometimes the doctors get the diagnosis wrong, too, which delays recovery - misdiagnoses are running at about " DiagnosisError " points - we could improve that. Other things "
+  "whose work capacity is below " Injury_Threshold " out of 100. We could tighten this up, but I'm not sure what the consequences for the scheme would be. Sometimes the doctors get the diagnosis wrong, too, which delays recovery - misdiagnoses are running at about " DiagnosisError " points - we could improve that. Other things "
   "to be aware of are that we're spending about $" AdSpend "million a year on safety and RTW advertising at the moment - more spend might reduce incidents and encourage people to return to partial work? ")
   user-message (word "Speaking of RTW, the balance of our preference for RTW 'at work' rather than straight from home or treatment is currently " PromoteRecoveryatWork ". We also have the option of funding more Occupational "
    "Rehabilitation services to help with this, though this will cost money, of course. We might save it in salary replacements, though? ")
@@ -220,14 +220,14 @@ to go
   countNoRecoverys
    ;; burnpatches
   EstimateTotalSystemCosts
-  if time = 500  [ performance  ] ;;and name != 0
-  if time = 1000  [ performance  ] ;;and name != 0
-  if time = 1500  [ performance  ] ;;and name != 0
-  if time = 2000  [ performance  ] ;;and name != 0
-  if time = 2500  [ performance  ] ;;and name != 0
-  if time = 3000  [ performance  ] ;;and name != 0
-  if time = 3500  [ performance  ] ;;and name != 0
-  if time = 4000 [ finalstate ]
+  if time = 500 and feedback = true [ performance  ] ;;and name != 0
+  if time = 1000 and feedback = true  [ performance  ] ;;and name != 0
+  if time = 1500 and feedback = true  [ performance  ] ;;and name != 0
+  if time = 2000 and feedback = true  [ performance  ] ;;and name != 0
+  if time = 2500 and feedback = true  [ performance  ] ;;and name != 0
+  if time = 3000 and feedback = true  [ performance  ] ;;and name != 0
+  if time = 3500 and feedback = true  [ performance  ] ;;and name != 0
+  if time = 4000 and feedback = true  [ finalstate stop ]
   monitorsatisfaction
   ;; monitortrust
   ;;monitorRTW
@@ -260,19 +260,19 @@ to Emergency ;; individuals emerging from the general population into emergency 
 end
 
 to EmployerFromGP ;; trust is going affect the DNA rate here
-  if any? GPs-here and health > (Claim_Threshold - DiagnosisError ) [
+  if any? GPs-here and health > (Injury_Threshold - DiagnosisError ) [
      face one-of Employer1s fd speed  set GoingtoEmployer1 1 set InGP 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InGP 0 set GoingtoEmployer1 0 ]
 end
 
 to BecomeLodgeClaim ;;
-     if Emergency_Referral > random 100 and InEmergency = 1 and any? AcuteCares-here and health < Claim_Threshold [
+     if Emergency_Referral > random 100 and InEmergency = 1 and any? AcuteCares-here and health < Injury_Threshold [
     face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InEmergency 0 ]
    if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InEmergency 0 set GoingtoLodgeClaim 0  ]
 
-    if GP_Referral > random 100 and InGP = 1 and any? GPs-here and health < Claim_Threshold [
+    if GP_Referral > random 100 and InGP = 1 and any? GPs-here and health < Injury_Threshold [
       face one-of LodgeClaims fd speed  set goingtoLodgeClaim 1 set InGP 0 ]
     if goingtoLodgeClaim = 1 [ Face one-of LodgeClaims fd speed ]
         if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set InGP 0 set GoingtoLodgeClaim 0  ]
@@ -321,14 +321,14 @@ to OverCapReview
 end
 
 to TreatmentToGeneral
-   if health > Claim_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if health > Injury_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of RTWs fd speed set GoingtoRTW 1 set InTreatment 0 ]
      if GoingtoRTW = 1 [ face one-of RTWs fd speed ]
     if any? RTWs in-radius 1 [ move-to one-of RTWs set InRTW 1 set GoingtoRTW 0 set FinalClaimTime DynClaimTime ]
 end
 
 to TreatmenttoEmployer ;; in here is where trust is going to affect the DNA rate
-   if (health + (PromoteRecoveryAtWork + random 5 - random 5 )) > Claim_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
+   if (health + (PromoteRecoveryAtWork + random 5 - random 5 )) > Injury_Threshold and InTreatment = 1 and any? TreatmentCentres-here [ ;; people are more likely resist going back to work if their levels of trust are lower
      face one-of Employer1s fd speed set GoingtoEmployer1 1 set InTreatment 0 ]
      if GoingtoEmployer1 = 1 [ face one-of Employer1s fd speed ]
     if any? Employer1s in-radius 1 [ move-to one-of Employer1s Set InEmployer1 1 set InTreatment 0 set GoingtoEmployer1 0 ]
@@ -373,27 +373,27 @@ to EmployernotReady ;; trust is going to affect the likelihood that anyone comes
 end
 
 to ReturntoWork ;;
-  if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) * ([ AddCap ] of one-of OccRehabResources)) > Claim_Threshold and InEmployer1 = 1 and
+  if any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) * ([ AddCap ] of one-of OccRehabResources)) > Injury_Threshold and InEmployer1 = 1 and
   any? Employer1s-here [
     face one-of RTWs fd speed set GoingtoRTW 1 set InEmployer1 0 set Coststreatment (CostsTreatment + OccRehabMultiplier ) set PartialRTW 1 ]
 
-  if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) ) < Claim_Threshold and InEmployer1 = 1 and
+  if not any? OccRehabResources-here and ( health * ([ Readiness ] of one-of Employer1s ) ) < Injury_Threshold and InEmployer1 = 1 and
   any? Employer1s-here and Insystem = 1 [
-    face one-of TreatmentCentres fd speed set GoingtoTreatment 1 set InEmployer1 0 set salary (salary * ( health / Claim_Threshold )) set FailedRTW 1 set PartialRTW 0 set FullRTW 0 ]
+    face one-of TreatmentCentres fd speed set GoingtoTreatment 1 set InEmployer1 0 set salary (salary * ( health / Injury_Threshold )) set FailedRTW 1 set PartialRTW 0 set FullRTW 0 ]
     if GoingtoTreatment = 1 [ face one-of TreatmentCentres fd speed if any? TreatmentCentres in-radius 1 [ move-to one-of TreatmentCentres Set InTreatment 1 set InEmployer1 0 set GoingtoTreatment 0 ]]
 end
 
 to ReturntoWorkwithOccRehab ;; trust is going to affec the DNA2 rate here
   if GoingtoVicPops = 1 [ face one-of VicPops fd speed if any? VicPops in-radius 1 [ move-to one-of VicPops die ]]
 
-  if (health * ([ Readiness ] of one-of Employer1s ) ) > Claim_Threshold and InRTW = 1 and any? RTWs-here [
+  if (health * ([ Readiness ] of one-of Employer1s ) ) > Injury_Threshold and InRTW = 1 and any? RTWs-here [
      face one-of VicPops fd speed set GoingtoVicPops 1 set InRTW 0 set FinalClaimTime DynClaimTime ]
 
   if GoingtoVicPops = 1 [ face one-of VicPops fd speed if any? VicPops in-radius 1 [ move-to one-of VicPops die ]] ;; then people need to actually ret from the pool
 end
 
 to ClaimAfterMisdiagnosis
-  if InSystem = 0 and any? Employer1s-here and health < Claim_Threshold and inEmployer1 = 1 [
+  if InSystem = 0 and any? Employer1s-here and health < Injury_Threshold and inEmployer1 = 1 [
     face one-of LodgeClaims fd speed set GoingtoEmployer1 0 set inEmployer1 0 set goingtoLodgeClaim 1 set memory 1  ]
    if GoingtoLodgeClaim = 1 [ face one-of LodgeClaims fd speed  ]
       if any? LodgeClaims in-radius 1 [ move-to one-of LodgeClaims Set InLodgeClaim 1 set GoingtoLodgeClaim 0 ]
@@ -485,7 +485,7 @@ to SocialEpi
 end
 
 to RemoveHealthyWorkers
-  if InSystem = 0 and health > Claim_Threshold [ die ]
+  if InSystem = 0 and health > Injury_Threshold [ die ]
 end
 
 to CountTreatmentCosts
@@ -551,21 +551,26 @@ to playaudio
 end
 
 to performance
-   set time time + 1
-   user-message (word "You have a new text message from the chair. Hi " name ", Bruce here - just checking in after the Board meeting today - I'm sure everything in hand ...but just confirming the changes we talked about?")
-   user-message ("Now's your chance to change your strategy before the next meeting. What do you want to do?")
+  set time time + 2
+  playmeeting
+  user-message ( "Now's your chance to change your strategy before the next meeting. What do you think you should do?")
+  user-message (word "You have a new text message from the chair. Hi " name ", Bruce here - just checking in after the Board meeting today - I'm sure everything's in hand ...but just confirming you are OK to implement those changes we talked about?")
   if time > ticks [ go ]
   set time ticks
 end
 
 to monitorsatisfaction
-  if mean [ satisfaction ] of workers < 70 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Look we've heard satisfaction is running a little low - just wondering if you have any plans up your sleeve? I'll leave it with you")  ]
-  if mean [ trust ] of workers < 75 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Getting some bad reports in about dispute numbers and our reputation in the community. A bit concerned about how we're coming across. Is it as bad as I hear? Anything we can try? Chat soon, Bruce")]
-  if count workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 0 and mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 52 and 1 > random 500 [ playdisputes user-message (word "We're all a bit worried here about the claim durations - any way we can pull these back? Worried about the costs. Give me a call")  ]
-  if totalsystemcosts > 5000 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hey, just keep an eye on the books - don't let them get away! Talk soon, Bruce") ]
-  if totalsystemcosts > 10000 and 1 > random 500 [ playcosts user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi - Just looking at the books ahead of the next meeting - costs look high. Can we chat?")  ]
-  if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 70 and 1 > random 500 [ user-message ("NEW EMAIL FROM THE CHAIR: We don't seem to be quite hitting our targets for worker health. We'd like to see some improvements soon")]
-  if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] > 50 and 1 > random 500 [ playhealth user-message ("NEW TEXT MESSAGE FROM THE CHAIR: Hi - Worker health seem to be going pretty badly - We need to turn this around asap. Let's plan some changes")]
+  if feedback = true [
+    if mean [ satisfaction ] of workers < 70 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Look we've heard satisfaction is running a little low - just wondering if you have any plans up your sleeve? I'll leave it with you")  ]
+    if mean [ trust ] of workers < 75 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Getting some bad reports in about dispute numbers and our reputation in the community. A bit concerned about how we're coming across. Is it as bad as I hear? Anything we can try? Chat soon, Bruce")]
+    if count workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 0 and mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 52 and 1 > random 500 [ playdisputes user-message (word "We're all a bit worried here about the claim durations - any way we can pull these back? Worried about the costs. Give me a call")  ]
+    if totalsystemcosts > 3500 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hey, just keep an eye on the books - don't let them get away! Talk soon, Bruce") ]
+    if totalsystemcosts > 5000 and 1 > random 500 [ playcosts user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi - Just looking at the books ahead of the next meeting - costs look high. Can we chat?")  ]
+    if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 70 and 1 > random 500 [ user-message ("NEW EMAIL FROM THE CHAIR: We don't seem to be quite hitting our targets for worker health. We'd like to see some improvements soon")]
+    if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 50 and 1 > random 500 [ playhealth user-message ("NEW TEXT MESSAGE FROM THE CHAIR: Hi - Worker health seem to be going pretty badly - We need to turn this around asap. Let's plan some changes")]
+    if Adspend < 15 and 1 > random 1000 [ user-message (word "YOU HAVE A NEW EMAIL FROM THE HEAD OF MARKETING: Hi, " name ". We have costed that new campaign idea and I really think could help us meet our targets. What do you think? Can we allocate more budget for AdSpend?")]
+    if count workers with [ FailedRTW = 1 ] > count workers with [ FullRTW = 1 ] and 1 > random 500 [ user-message (word "NEW MESSAGE FROM THE CHAIR: Hi, " name ", Hearing more workers failed to RTW last month than successfully returned - Is this part of the plan? Enlighten me, please.")]
+  ]
 end
 
  to playdisputes
@@ -580,7 +585,14 @@ to playcosts
   user-message ("You have a new voicmail" ) sound:play-sound-and-wait "blowout.wav"
 end
 
+to playmeeting
+  user-message ("Time to present numbers to the board...") sound:play-sound-and-wait "meeting.wav"
+end
+
+
 to finalstate
+  if mean [ satisfaction ] of workers > 75 and mean [ health ] of workers with [ Insystem = 1 ] > 70 and totalsystemcosts < 10000 [ sound:play-sound-and-wait "end of year.wav" ]
+  if mean [ satisfaction ] of workers < 75 or mean [ health ] of workers with [ Insystem = 1 ] < 70 or totalsystemcosts > 10000 [ sound:play-sound-and-wait "fired.wav" ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -1069,11 +1081,11 @@ SLIDER
 645
 521
 678
-Claim_Threshold
-Claim_Threshold
+Injury_Threshold
+Injury_Threshold
 0
 100
-50.0
+80.0
 1
 1
 NIL
@@ -1209,7 +1221,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-0.0
+2.0
 1
 1
 NIL
@@ -1382,7 +1394,7 @@ TreatmentDenials
 TreatmentDenials
 0
 100
-20.0
+25.0
 1
 1
 NIL
@@ -1452,6 +1464,17 @@ mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ]
 1
 1
 11
+
+SWITCH
+342
+32
+451
+65
+Feedback
+Feedback
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
