@@ -566,7 +566,7 @@ to monitorsatisfaction
     if mean [ trust ] of workers < 75 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Getting some bad reports in about dispute numbers and our reputation in the community. A bit concerned about how we're coming across. Is it as bad as I hear? Anything we can try? Chat soon, Bruce")]
     if count workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 0 and mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 52 and 1 > random 500 [ playdisputes user-message (word "We're all a bit worried here about the claim durations - any way we can pull these back? Worried about the costs. Give me a call")  ]
     if totalsystemcosts > 3000 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hey, just keep an eye on the books - don't let them get away! Talk soon, Bruce") ]
-    if totalsystemcosts > 400 and 1 > random 500 [ playcosts user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi - Just looking at the books ahead of the next meeting - costs look high. Can we chat?")  ]
+    if totalsystemcosts > 4000 and 1 > random 500 [ playcosts user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi - Just looking at the books ahead of the next meeting - costs look high. Can we chat?")  ]
     if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 70 and 1 > random 500 [ user-message ("NEW EMAIL FROM THE CHAIR: We don't seem to be quite hitting our targets for worker health. We'd like to see some improvements soon")]
     if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 50 and 1 > random 500 [ playhealth user-message ("NEW TEXT MESSAGE FROM THE CHAIR: Hi - Worker health seem to be going pretty badly - We need to turn this around asap. Let's plan some changes")]
     if Adspend < 15 and 1 > random 1000 [ user-message (word "YOU HAVE A NEW EMAIL FROM THE HEAD OF MARKETING: Hi, " name ". We have costed that new campaign idea and I really think could help us meet our targets. What do you think? Can we allocate more budget for AdSpend?")]
@@ -1093,17 +1093,17 @@ Injury_Threshold
 Injury_Threshold
 0
 100
-80.0
+85.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-19
-23
-167
-56
+345
+545
+493
+578
 Injured_Workers
 Injured_Workers
 0
@@ -1141,7 +1141,7 @@ Processing_Efficiency
 Processing_Efficiency
 0
 2
-1.3
+1.4
 .1
 1
 NIL
@@ -1203,7 +1203,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 300
-300.0
+80.0
 1
 1
 NIL
@@ -1216,7 +1216,7 @@ SWITCH
 677
 SendORs
 SendORs
-0
+1
 1
 -1000
 
@@ -1229,7 +1229,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-1.0
+2.0
 1
 1
 NIL
@@ -1259,7 +1259,7 @@ Emergency_Pres
 Emergency_Pres
 0
 100
-50.0
+56.0
 1
 1
 NIL
@@ -1274,7 +1274,7 @@ DiagNosisError
 DiagNosisError
 0
 20
-5.0
+3.0
 1
 1
 NIL
@@ -1289,7 +1289,7 @@ AdSpend
 AdSpend
 0
 30
-16.0
+5.0
 1
 1
 NIL
@@ -1402,7 +1402,7 @@ TreatmentDenials
 TreatmentDenials
 0
 100
-0.0
+40.0
 1
 1
 NIL

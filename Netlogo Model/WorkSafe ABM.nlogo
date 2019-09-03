@@ -1093,7 +1093,7 @@ Injury_Threshold
 Injury_Threshold
 0
 100
-70.0
+85.0
 1
 1
 NIL
@@ -1101,9 +1101,9 @@ HORIZONTAL
 
 SLIDER
 19
-23
+17
 167
-56
+50
 Injured_Workers
 Injured_Workers
 0
@@ -1203,7 +1203,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 300
-151.0
+80.0
 1
 1
 NIL
@@ -1216,7 +1216,7 @@ SWITCH
 677
 SendORs
 SendORs
-0
+1
 1
 -1000
 
@@ -1229,7 +1229,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-1.0
+0.0
 1
 1
 NIL
@@ -1259,7 +1259,7 @@ Emergency_Pres
 Emergency_Pres
 0
 100
-50.0
+56.0
 1
 1
 NIL
@@ -1274,7 +1274,7 @@ DiagNosisError
 DiagNosisError
 0
 20
-5.0
+3.0
 1
 1
 NIL
@@ -1289,7 +1289,7 @@ AdSpend
 AdSpend
 0
 30
-14.0
+5.0
 1
 1
 NIL
@@ -1402,7 +1402,7 @@ TreatmentDenials
 TreatmentDenials
 0
 100
-40.0
+15.0
 1
 1
 NIL
@@ -1480,7 +1480,7 @@ SWITCH
 65
 Feedback
 Feedback
-0
+1
 1
 -1000
 
