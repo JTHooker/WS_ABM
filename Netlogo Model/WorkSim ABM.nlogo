@@ -126,19 +126,19 @@ to setupscenario
   user-message (word "But, given your high-flying and impressive career in the public and private sectors to date, you feel like you and your team have the skills to meet the challenge. You "
     "receive an encouraging phone call from the chair of the Board, wishing you all the best and setting out expectations for the first year")
   if user-yes-or-no? "Listen to call?" [ playaudio ]
-  user-message ( "The Board are setting very clear expectations for you to achieve. After 10 meetings, the average satisfaction rating among injured workers must be at least 75 points. The average health of injured workers must be at least 70 points and average claim durations must be less than 52 weeks. The average total system costs must be below $3500 billion. If you fail to acheive these targets, you will probaly be fired.")
-  user-message ("The first thing you do is assess the state of play. You ask your most trusted advisor about how things sit right now. This is what they tell you...")
-  user-message (word "Hi " name ", Things aren't great. New Injured workers are still coming in at around " Injured_Workers " per day. Our treatment denials are at " TreatmentDenials "%, which means " TreatmentDenials "% of service requests are being rejected by providers. This means people are waiting longer for "
-    "services and experiencing delays in treatment. We have tried to manage expectations of assessment and treatment, but beyond about " ManageExpectations " days, people do start to get a bit frustrated and upset that nothing is happening with their claim. They have long memories when things go badly, too. "
+  user-message ( "The Board are setting very clear expectations for you to acheive. After 10 meetings, the average satisfaction rating among injured workers must be at least 75 points. The average health of injured workers must be at least 70 points and average claim durations must be less than 52 weeks. The average total system costs must be below $3500 billion. If you fail to acheive these targets, you will all be fired (which may sound like a good option...)")
+  user-message ("The first thing you do is assess the state of play. You ask your most trusted advisors, Alex, Shannon and Tyler, about how things sit right now. This is what they tell you...")
+  user-message (word "Hi " name ", Things aren't great. New Injured workers are still coming in at around " Injured_Workers " per day. Our treatment denials are at " TreatmentDenials "%, which means " TreatmentDenials "% of service requests asked for by clients are being rejected. This means people are waiting longer for "
+    "services and experiencing delays in treatment. We have tried to manage expectations of assessment and treatment, but beyond about " ManageExpectations " days, people do start to get frustrated that nothing is happening with their claim. They have long memories when things go badly, too and it's hard to keep them satisfied "
   "Agents' capacity to assess people is at about " Assessment_Capacity " per day and the treatment and hospital system is able to handle around " Treatment_Capacity " people per day at present. Changes in these numbers through increasing or decreasing processing efficiencies "
    "can help speed things up or slow them down. ")
-  user-message (word "Our total dispute numbers are up and down, but successful client dispute rates are sitting at around " Success_Dispute_% "%. In terms of policies, we are continuing to fund treatment for anyone "
-  "whose work capacity is below " Injury_Threshold " out of 100. We could tighten this up, but I'm not sure what the consequences for the scheme would be. Sometimes the doctors get the diagnosis wrong, too, which delays recovery - misdiagnoses are running at about " DiagnosisError " points - we could improve that. Other things "
-  "to be aware of are that we're spending about $" AdSpend "million a year on safety and RTW advertising at the moment - more spend might reduce incidents and encourage people to return to partial work? ")
-  user-message (word "Speaking of RTW, the balance of our preference for RTW 'at work' rather than straight from home or treatment is currently " PromoteRecoveryatWork ". We also have the option of funding more Occupational "
+  user-message (word "Our total dispute numbers are up and down, but successful client dispute rates are sitting at around " Success_Dispute_% "%. Disputes upset people and delay recovery. In terms of policies, we are continuing to fund treatment for anyone "
+  "whose work capacity is below " Injury_Threshold " out of 100 but not above - we expect them to go back to work. We could change this, but I'm not sure what the consequences for the scheme would be. Sometimes the doctors get the diagnosis wrong, too, which delays recovery - misdiagnoses are running at about " DiagnosisError " points - we could improve that. Other things "
+  "to be aware of are that we're spending about $" AdSpend "million a year on safety and RTW advertising at the moment - more spend might reduce incidents and encourage people to return to partial work but I'm not sure that we have the budget? ")
+  user-message (word "Speaking of RTW, the balance of our preference for RTW 'at work' rather than straight from home or treatment is currently " PromoteRecoveryatWork " meaning we don't have a preference. We also have the option of funding more Occupational "
    "Rehabilitation services to help with this, though this will cost money, of course. We might save it in salary replacements, though? ")
   user-message (word "Finally, there is the issue of long-tail claims. At present, the maximum number of weeks people can be eligible for treatment and wage-replacement costs is " Max_claim_duration ". We might want to revisit that?")
-  if user-yes-or-no? "So - I'll leave all this information with you and let you watch what's happened over the last few months. I'll check in with you each couple on months and see how your decisions have been going. So, what's your plan? Do you think you're ready to start?" [ go ]
+  if user-yes-or-no? "So - I'll leave all this information with you and let you watch what's happened over the last few months. I'll check in with you each couple of months and see how your decisions have been going. So, what's your plan? Do you think you're ready to start?" [ go ]
 
 end
 
@@ -154,7 +154,7 @@ to isClaimType
 end
 
 to setup-image
-  import-drawing "wslogo.png"
+  import-drawing "WorkSim logo.png"
   set Adspend 5
   set SendORs false
 end
@@ -562,15 +562,15 @@ end
 
 to monitorsatisfaction
   if feedback = true [
-    if mean [ satisfaction ] of workers < 70 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Look we've heard satisfaction is running a little low - just wondering if you have any plans up your sleeve? I'll leave it with you")  ]
-    if mean [ trust ] of workers < 75 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Getting some bad reports in about dispute numbers and our reputation in the community. A bit concerned about how we're coming across. Is it as bad as I hear? Anything we can try? Chat soon, Bruce")]
-    if count workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 0 and mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 52 and 1 > random 500 [ playdisputes user-message (word "We're all a bit worried here about the claim durations - any way we can pull these back? Worried about the costs. Give me a call")  ]
-    if totalsystemcosts > 3000 and 1 > random 500 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hey, just keep an eye on the books - don't let them get away! Talk soon, Bruce") ]
-    if totalsystemcosts > 4000 and 1 > random 500 [ playcosts user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi - Just looking at the books ahead of the next meeting - costs look high. Can we chat?")  ]
-    if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 70 and 1 > random 500 [ user-message ("NEW EMAIL FROM THE CHAIR: We don't seem to be quite hitting our targets for worker health. We'd like to see some improvements soon")]
-    if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 50 and 1 > random 500 [ playhealth user-message ("NEW TEXT MESSAGE FROM THE CHAIR: Hi - Worker health seem to be going pretty badly - We need to turn this around asap. Let's plan some changes")]
-    if Adspend < 15 and 1 > random 1000 [ user-message (word "YOU HAVE A NEW EMAIL FROM THE HEAD OF MARKETING: Hi, " name ". We have costed that new campaign idea and I really think could help us meet our targets. What do you think? Can we allocate more budget for AdSpend?")]
-    if count workers with [ FailedRTW = 1 ] > count workers with [ FullRTW = 1 ] and 1 > random 500 [ user-message (word "NEW MESSAGE FROM THE CHAIR: Hi, " name ", Hearing more workers failed to RTW last month than successfully returned - Is this part of the plan? Enlighten me, please.")]
+    if mean [ satisfaction ] of workers < 70 and 1 > random 5000 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Look we've heard satisfaction is running a little low - just wondering if you have any plans up your sleeve? I'll leave it with you")  ]
+    if mean [ trust ] of workers < 75 and 1 > random 5000 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi, Getting some bad reports in about dispute numbers and our reputation in the community. A bit concerned about how we're coming across. Is it as bad as I hear? Anything we can try? Chat soon, Bruce")]
+    if count workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 0 and mean [ FinalClaimTime ] of workers with [ insystem = 1 and GoingtoVicPops = 1 ] > 52 and 1 > random 5000 [ playdisputes user-message (word "We're all a bit worried here about the claim durations - any way we can pull these back? Worried about the costs. Give me a call")  ]
+    if totalsystemcosts > 4000 and 1 > random 5000 [ user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hey, just keep an eye on the books - don't let them get away! Talk soon, Bruce") ]
+    if totalsystemcosts > 6000 and 1 > random 5000 [ playcosts user-message ( "NEW TEXT MESSAGE FROM THE CHAIR: Hi - Just looking at the books ahead of the next meeting - costs look high. Can we chat?")  ]
+    if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 70 and 1 > random 5000 [ user-message ("NEW EMAIL FROM THE CHAIR: We don't seem to be quite hitting our targets for worker health. We'd like to see some improvements soon")]
+    if ticks > 100 and mean [ health ] of workers with [ Insystem = 1 ] < 50 and 1 > random 5000 [ playhealth user-message ("NEW TEXT MESSAGE FROM THE CHAIR: Hi - Worker health seem to be going pretty badly - We need to turn this around asap. Let's plan some changes")]
+    if Adspend < 15 and 1 > random 3000 [ user-message (word "YOU HAVE A NEW EMAIL FROM THE HEAD OF MARKETING: Hi, " name ". We have costed that new campaign idea and I really think could help us meet our targets. What do you think? Can we allocate more budget for AdSpend?")]
+    if count workers with [ FailedRTW = 1 ] > count workers with [ FullRTW = 1 ] and 1 > random 5000 [ user-message (word "NEW MESSAGE FROM THE CHAIR: Hi, " name ", Hearing more workers failed to RTW last month than successfully returned - Is this part of the plan? Enlighten me, please.")]
   ]
 end
 
@@ -592,8 +592,8 @@ end
 
 
 to finalstate
-  if mean [ satisfaction ] of workers > 75 and mean [ health ] of workers with [ Insystem = 1 ] > 70 and totalsystemcosts < 10000 [ sound:play-sound-and-wait "end of year.wav" ]
-  if mean [ satisfaction ] of workers < 75 or mean [ health ] of workers with [ Insystem = 1 ] < 70 or totalsystemcosts > 10000 [ sound:play-sound-and-wait "fired.wav" ]
+  if mean [ satisfaction ] of workers > 75 and mean [ health ] of workers with [ Insystem = 1 ] > 70 and totalsystemcosts < 1000 [ sound:play-sound-and-wait "end of year.wav" ]
+  if mean [ satisfaction ] of workers < 75 or mean [ health ] of workers with [ Insystem = 1 ] < 70 or totalsystemcosts > 1000 [ sound:play-sound-and-wait "fired.wav" ]
 end
 
 to Mass-Incident
@@ -605,7 +605,7 @@ to Mass-Incident
 end
 
 to playalert
-  sound:play-sound-and-wait "alarm.wav"
+  sound:play-sound-and-wait "TRUMPET"
 end
 
 to incomingInjuries
@@ -1053,7 +1053,7 @@ PLOT
 252
 1799
 444
-Overall Trust
+Client health and satisfaction
 NIL
 NIL
 0.0
@@ -1064,10 +1064,8 @@ true
 true
 "if ticks = 1 [ clear-plot ] " ""
 PENS
-"Mean Trust of All Workers" 1.0 0 -5298144 true "" "if ticks > 0 [ plot mean [ trust ] of workers ]"
 "Mean Satisfaction" 1.0 0 -13840069 true "" "if ticks > 0 [ plot mean [ satisfaction ] of workers with [ insystem = 1 ] ] "
 "Mean Health" 1.0 0 -14070903 true "" "if ticks > 0 [ plot mean [ health ] of workers with [ insystem = 1 ] ] "
-"Trust of Workers In System" 1.0 0 -11221820 true "" "if ticks > 0 [ plot mean [ trust ] of workers with [ insystem = 1 ] ]"
 
 SLIDER
 362
@@ -1078,7 +1076,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-50.0
+51.0
 1
 1
 NIL
@@ -1093,22 +1091,22 @@ Injury_Threshold
 Injury_Threshold
 0
 100
-85.0
+60.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-345
-545
-493
-578
+19
+17
+167
+50
 Injured_Workers
 Injured_Workers
 0
 30
-10.0
+11.0
 1
 1
 NIL
@@ -1141,7 +1139,7 @@ Processing_Efficiency
 Processing_Efficiency
 0
 2
-1.4
+1.0
 .1
 1
 NIL
@@ -1187,7 +1185,7 @@ SLIDER
 Assessment_Capacity
 Assessment_Capacity
 0
-100
+200
 100.0
 1
 1
@@ -1203,7 +1201,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 300
-80.0
+300.0
 1
 1
 NIL
@@ -1229,7 +1227,7 @@ PromoteRecoveryatWork
 PromoteRecoveryatWork
 -10
 10
-2.0
+0.0
 1
 1
 NIL
@@ -1402,7 +1400,7 @@ TreatmentDenials
 TreatmentDenials
 0
 100
-40.0
+67.0
 1
 1
 NIL

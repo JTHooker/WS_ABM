@@ -1078,7 +1078,7 @@ Success_Dispute_%
 Success_Dispute_%
 0
 100
-50.0
+88.0
 1
 1
 NIL
@@ -1203,7 +1203,7 @@ Max_Claim_Duration
 Max_Claim_Duration
 0
 300
-80.0
+184.0
 1
 1
 NIL
@@ -1402,7 +1402,7 @@ TreatmentDenials
 TreatmentDenials
 0
 100
-15.0
+34.0
 1
 1
 NIL
