@@ -19,7 +19,6 @@ breed [ Workers Worker ]
 breed [ OccRehabResources OccRehabResource ]
 breed [ Advertisements Advertisement ]
 
-;; test to check github
 
 OccRehabResources-own [ Addcap costofAddcap ]
 
